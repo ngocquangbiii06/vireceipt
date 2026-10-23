@@ -1,0 +1,23 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest
+      # smoke test of the CLI on the synthetic fixtures
+      - run: >
+          uv run vireceipt-eval --gold tests/fixtures/gold.jsonl
+          --pred tests/fixtures/pred.jsonl --split val --run-name ci-smoke --out /tmp/results

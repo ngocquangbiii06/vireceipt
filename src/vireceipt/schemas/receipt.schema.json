@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ngocquangbiii06/vireceipt/schemas/receipt.schema.json",
+  "title": "Receipt",
+  "description": "Structured content of one Vietnamese retail receipt. Money is an integer number of dong. null means the field is not printed or cannot be read.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seller",
+    "issued_at",
+    "items",
+    "subtotal",
+    "discount",
+    "vat",
+    "total",
+    "currency",
+    "payment_method"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "seller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "address", "phone", "tax_code"],
+      "properties": {
+        "name": { "type": ["string", "null"], "minLength": 1 },
+        "address": { "type": ["string", "null"], "minLength": 1 },
+        "phone": { "type": ["string", "null"], "minLength": 1 },
+        "tax_code": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "issued_at": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "time"],
+      "properties": {
+        "date": {
+          "type": ["string", "null"],
+          "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+        },
+        "time": {
+          "type": ["string", "null"],
+          "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    },
+    "subtotal": { "$ref": "#/$defs/money" },
+    "discount": { "$ref": "#/$defs/money" },
+    "vat": { "$ref": "#/$defs/money" },
+    "total": { "$ref": "#/$defs/money" },
+    "currency": { "const": "VND" },
+    "payment_method": {
+      "enum": ["cash", "card", "bank_transfer", "e_wallet", "other", null]
+    }
+  },
+  "$defs": {
+    "money": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "quantity", "unit_price", "amount"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "quantity": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "unit_price": { "$ref": "#/$defs/money" },
+        "amount": { "$ref": "#/$defs/money" }
+      }
+    }
+  }
+}

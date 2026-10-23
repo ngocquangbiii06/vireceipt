@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Secrets
+.env
+.env.*
+
+# Data, images and labels are never committed
+data/*
+!data/README.md
+
+# Model weights, checkpoints, experiment tracking, scratch runs
+models/
+checkpoints/
+*.safetensors
+*.bin
+*.gguf
+*.onnx
+*.pt
+mlruns/
+runs/
+
+# Claude review output (read by Codex, not committed)
+.reviews/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
