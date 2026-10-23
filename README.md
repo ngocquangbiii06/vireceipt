@@ -86,6 +86,7 @@ uv run pytest
 uv run ruff check . && uv run ruff format --check .
 uv run vireceipt-check-labels tests/fixtures/gold.jsonl
 uv run --group label streamlit run src/vireceipt/labeling/app.py -- --data data
+uv run vireceipt-extract --help
 
 # score predictions against labels (fixtures shown; real data lives in data/, not in git)
 uv run vireceipt-eval --gold tests/fixtures/gold.jsonl --pred tests/fixtures/pred.jsonl \
@@ -100,6 +101,46 @@ Prediction files are JSON Lines, one object per receipt:
 ```
 
 Only `id` and `receipt` are required; `receipt` may be `null` when extraction failed.
+
+## Running an extraction adapter
+
+The runner and CLI are available; **no OCR/LLM/VLM backend is implemented yet**.
+Provide an importable Python callable with this contract:
+
+```python
+from pathlib import Path
+from vireceipt.extraction import ExtractionResult
+
+
+def extract(image: Path) -> ExtractionResult:
+    # Call your backend with the image, then return its raw JSON output.
+    # Supply confidence/cost_usd only when the backend provides them.
+    ...
+```
+
+Create an image-only UTF-8 JSONL manifest, such as `data/manifest.jsonl`:
+
+```json
+{"id":"r0001","image":"images/r0001.jpg"}
+{"id":"r0002","image":"images/r0002.png"}
+```
+
+```bash
+# my_backend.extract must implement the contract above and be importable
+uv run vireceipt-extract data/manifest.jsonl --extractor my_backend:extract \
+    --out data/predictions/baseline.jsonl
+```
+
+Images must be JPG/PNG files inside the manifest directory, or an explicit `--images-root`.
+The manifest accepts only unique IDs (`r` plus four digits) and relative image paths; labels
+are rejected. `--overwrite` is required to replace an existing prediction file. The manifest,
+source images and frozen `data/labels/test.jsonl` cannot be overwritten.
+
+Every prediction currently has `decision: "review"`. Missing confidence/cost stays `null`;
+latency measures the adapter call. Schema-invalid JSON is retained with `schema_valid: false`.
+An adapter failure produces a null receipt and an error code; later images still run, the
+output is written atomically, and the CLI exits with code 1. A schema-invalid output alone
+does not change the exit code. Score the resulting JSONL with `vireceipt-eval` as above.
 
 ## Repository layout
 
