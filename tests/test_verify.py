@@ -78,3 +78,21 @@ def test_uncheckable_arithmetic_warns_instead_of_crashing(receipt):
     assert any(
         i.code == "arithmetic_uncheckable" and i.severity == "warning" for i in result.issues
     )
+
+
+@pytest.mark.parametrize("scenario", ["mixed-large-float", "sum-display-limit"])
+def test_numeric_boundaries_preserve_date_checks_without_crashing(receipt, scenario):
+    from vireceipt.verify import verify_receipt
+
+    receipt["issued_at"]["date"] = "2026-10-24"
+    if scenario == "mixed-large-float":
+        receipt.update(items=[], subtotal=10**1000, total=10**1000, discount=1.0, vat=None)
+    else:
+        receipt["items"] = [
+            {"name": "Synthetic", "quantity": None, "unit_price": None, "amount": 9 * 10**4299}
+            for _ in range(2)
+        ]
+        receipt.update(subtotal=1, total=1)
+    result = verify_receipt(receipt, today=TODAY)
+    assert result.schema_valid
+    assert {"arithmetic_uncheckable", "date_future"} <= {i.code for i in result.issues}

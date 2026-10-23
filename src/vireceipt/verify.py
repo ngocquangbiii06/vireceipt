@@ -31,11 +31,13 @@ def verify_receipt(receipt: Any, *, today: date | None = None) -> Verification:
         )
     try:
         issues = check_receipt(receipt, today=today)
-    except DecimalException:
-        # Keep date/seller/total checks even when line arithmetic exceeds Decimal's precision.
-        issues = check_receipt({**receipt, "items": []}, today=today)
+    except (DecimalException, OverflowError, ValueError):
+        # Numeric overflow/format limits leave arithmetic unverified; retain nonnumeric checks.
+        issues = check_receipt(
+            {**receipt, "items": [], "subtotal": None, "total": None}, today=today
+        )
         issues.append(
-            Issue("arithmetic_uncheckable", "warning", "Không kiểm được số học dòng hàng.")
+            Issue("arithmetic_uncheckable", "warning", "Không kiểm được đầy đủ số học hóa đơn.")
         )
     issued = receipt["issued_at"]["date"]
     if issued is None:
