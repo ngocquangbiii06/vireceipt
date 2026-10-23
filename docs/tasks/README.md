@@ -33,5 +33,5 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 | [T2-01](T2-01.md) | Hợp đồng extractor, runner và writer prediction | Codex | Eval harness hiện có | review |
 | [T2-02](T2-02.md) | CLI manifest ảnh và adapter extractor | Codex | T2-01 (cùng đợt) | review |
 | [T2-03](T2-03.md) | Prompt hóa đơn và parse JSON model | Codex | T2-01/T2-02 (nhánh cha) | review |
-| [T2-04](T2-04.md) | HTTP client Chat Completions | Codex | — | todo |
+| [T2-04](T2-04.md) | HTTP client Chat Completions | Codex | — | review |
 | [T2-05](T2-05.md) | Backend VLM ảnh qua Chat API | Codex | T2-03, T2-04 | todo |
