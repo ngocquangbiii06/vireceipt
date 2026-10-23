@@ -186,6 +186,22 @@ licenses are Apache-2.0 ([PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/b
 [recognition model](https://huggingface.co/PaddlePaddle/latin_PP-OCRv5_mobile_rec)).
 OCR text keeps line order and empty lines. OCR scores are not receipt-level confidence.
 
+For baseline A, send the local OCR transcript to a text model (PowerShell):
+
+```powershell
+$env:VIRECEIPT_LLM_BASE_URL = "http://127.0.0.1:8000/v1"
+$env:VIRECEIPT_LLM_MODEL = "your-served-text-model"
+# Set VIRECEIPT_LLM_API_KEY through your environment when required.
+uv run --group ocr vireceipt-extract data/manifest.jsonl --extractor vireceipt.extractors.ocr_llm:extract `
+    --out data/predictions/ocr-llm.jsonl
+```
+
+This adapter sends only OCR text to the LLM; images stay in the local OCR stage. Blank OCR
+fails the image without an LLM request. Configure `VIRECEIPT_LLM_TIMEOUT` (default 60 seconds)
+and `VIRECEIPT_LLM_MAX_TOKENS` (default 4096) as needed. The same JSON parsing, no-retry,
+review-only decisions and null confidence/cost rules apply. End-to-end transport tests use
+a local HTTP stub; neither adapter has been benchmarked on real receipts.
+
 ## Repository layout
 
 ```
