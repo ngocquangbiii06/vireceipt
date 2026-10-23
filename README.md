@@ -150,8 +150,16 @@ It checks schema, arithmetic (including half-up rounding), calendar dates, futur
 and missing seller/date/total/items. Missing numbers skip arithmetic checks; absent discount/VAT
 count as zero in the subtotal-to-total check. Numbers are preserved when checks disagree.
 Verification issues alone do not change the CLI exit code or trigger automatic acceptance.
-An empty issue list is not proof of correctness: OCR grounding and a measured acceptance policy
-are still needed. All current outputs require human review.
+The OCR+LLM adapter also checks normalized presence of populated fields in its OCR transcript.
+Predictions include `grounding: {checked, unsupported_fields}` and a `not_grounded` warning for
+each unsupported path. The transcript itself is not written into predictions. Without OCR (the
+VLM adapter's default), or when the schema is invalid, `checked` is false.
+
+Text checks preserve Vietnamese accents and word boundaries; numbers, dates, times and contact
+numbers allow common printed formats. Null fields and contract constants need no evidence.
+Presence does not prove field alignment or OCR/model correctness: a value can occur elsewhere,
+and unsupported printing formats can cause warnings. An empty issue list is not proof of
+correctness. A measured acceptance policy is still needed; all current outputs require review.
 
 For the built-in VLM adapter, configure a vision model on a compatible endpoint (PowerShell):
 

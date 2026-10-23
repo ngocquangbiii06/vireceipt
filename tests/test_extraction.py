@@ -29,6 +29,32 @@ def test_runner_writes_verification_issues_without_changing_receipt(receipt, tmp
     assert load_predictions(output) == [prediction]
 
 
+def test_runner_reports_ocr_grounding_without_persisting_transcript(receipt, tmp_path):
+    from vireceipt.extraction import ExtractionResult, extract_images, write_predictions
+
+    result = ExtractionResult(receipt, ocr_text="INTERNAL_TRANSCRIPT_MARKER")
+    (prediction,) = extract_images({"r0001": Path("a.png")}, lambda image: result, today=TODAY)
+    assert prediction.extra["grounding"]["checked"] is True
+    assert "seller.name" in prediction.extra["grounding"]["unsupported_fields"]
+    output = tmp_path / "pred.jsonl"
+    write_predictions([prediction], output)
+    assert "INTERNAL_TRANSCRIPT_MARKER" not in output.read_text(encoding="utf-8")
+    assert load_predictions(output) == [prediction]
+
+
+@pytest.mark.parametrize("text", [123, "\ud800"])
+def test_invalid_ocr_metadata_fails_one_image_and_continues(receipt, text):
+    from vireceipt.extraction import ExtractionResult, extract_images
+
+    bad, good = extract_images(
+        {"r0001": Path("a.png"), "r0002": Path("b.png")},
+        lambda image: ExtractionResult(receipt, ocr_text=text if image.name == "a.png" else None),
+        today=TODAY,
+    )
+    assert bad.receipt is None and bad.extra["error"] == "invalid_result"
+    assert good.receipt == receipt and good.extra["grounding"]["checked"] is False
+
+
 def test_runner_preserves_outputs_and_continues_after_backend_failure(receipt, monkeypatch):
     from vireceipt import extraction
 

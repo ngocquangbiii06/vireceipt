@@ -47,7 +47,7 @@ def test_cli_ocr_to_text_api_and_eval_roundtrip(llm_environment, tmp_path, monke
     from vireceipt.extract_cli import main
     from vireceipt.extractors import ocr_llm
 
-    transcript = "Cửa hàng Minh Anh\nSữa tươi 64000\nTổng 89000"
+    transcript = "INTERNAL_TRANSCRIPT_MARKER\nCửa hàng Minh Anh\nSữa tươi 64000\nTổng 89000"
     monkeypatch.setattr(ocr_llm, "read_text", lambda image: transcript)
     (tmp_path / "a.png").write_bytes(b"image processed locally by OCR")
     manifest, output = tmp_path / "images.jsonl", tmp_path / "pred.jsonl"
@@ -67,6 +67,9 @@ def test_cli_ocr_to_text_api_and_eval_roundtrip(llm_environment, tmp_path, monke
     (prediction,) = load_predictions(output)
     assert prediction.receipt == receipt and prediction.decision == "review"
     assert prediction.confidence is None and prediction.cost_usd is None
+    assert prediction.extra["grounding"]["checked"] is True
+    assert "seller.address" in prediction.extra["grounding"]["unsupported_fields"]
+    assert "INTERNAL_TRANSCRIPT_MARKER" not in output.read_text(encoding="utf-8")
     _, headers, body = llm_environment.requests[0]
     assert headers["Authorization"] == "Bearer synthetic-key"
     assert body["model"] == "synthetic-text" and body["max_tokens"] == 432

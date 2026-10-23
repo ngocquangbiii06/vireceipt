@@ -24,7 +24,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | T2-2 | `wave/T2-2` (nối từ `wave/T2-1`) | T2-03, T2-04, T2-05 | review |
 | T2-3 | `wave/T2-3` (nối từ `wave/T2-2`) | T2-06, T2-07 | review |
 | T3-1 | `wave/T3-1` (nối từ `wave/T2-3`) | T3-01, T3-02 | review |
-| T3-2 | `wave/T3-2` (nối từ `wave/T3-1`) | T3-03, T3-04 | doing |
+| T3-2 | `wave/T3-2` (nối từ `wave/T3-1`) | T3-03, T3-04 | review |
 
 ## Sau T1
 
@@ -48,4 +48,4 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 | [T3-01](T3-01.md) | Verifier schema/số học/ngày/thiếu dữ kiện | Codex | T1-02, T2-3 (nhánh cha) | review |
 | [T3-02](T3-02.md) | Tích hợp verifier vào prediction | Codex | T3-01 | review |
 | [T3-03](T3-03.md) | Grounding bằng normalized presence | Codex | T3-1 (nhánh cha) | review |
-| [T3-04](T3-04.md) | Truyền OCR evidence tới prediction | Codex | T3-03 | todo |
+| [T3-04](T3-04.md) | Truyền OCR evidence tới prediction | Codex | T3-03 | review |

@@ -7,6 +7,7 @@ from decimal import DecimalException
 from typing import Any
 
 from vireceipt.checks import Issue, check_receipt
+from vireceipt.grounding import GroundingResult, check_grounding
 from vireceipt.schema import is_valid_receipt
 
 
@@ -16,9 +17,12 @@ class Verification:
 
     schema_valid: bool
     issues: tuple[Issue, ...]
+    grounding: GroundingResult = GroundingResult(False)
 
 
-def verify_receipt(receipt: Any, *, today: date | None = None) -> Verification:
+def verify_receipt(
+    receipt: Any, *, today: date | None = None, ocr_text: str | None = None
+) -> Verification:
     """Check raw output without changing it; missing numbers never become arithmetic errors."""
     try:
         json.dumps(receipt, ensure_ascii=False, allow_nan=False).encode("utf-8")
@@ -51,4 +55,9 @@ def verify_receipt(receipt: Any, *, today: date | None = None) -> Verification:
         issues.append(Issue("total_missing", "warning", "Không đọc được tổng tiền."))
     if not receipt["items"]:
         issues.append(Issue("items_missing", "warning", "Không có dòng hàng đọc được."))
-    return Verification(True, tuple(issues))
+    grounding = check_grounding(receipt, ocr_text)
+    issues.extend(
+        Issue("not_grounded", "warning", f"{path}: chưa tìm được bằng chứng trong OCR.")
+        for path in grounding.unsupported_fields
+    )
+    return Verification(True, tuple(issues), grounding)

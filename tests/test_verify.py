@@ -96,3 +96,19 @@ def test_numeric_boundaries_preserve_date_checks_without_crashing(receipt, scena
     result = verify_receipt(receipt, today=TODAY)
     assert result.schema_valid
     assert {"arithmetic_uncheckable", "date_future"} <= {i.code for i in result.issues}
+
+
+def test_ocr_grounding_reports_paths_and_warnings(receipt):
+    from vireceipt.verify import verify_receipt
+
+    report = verify_receipt(receipt, today=TODAY, ocr_text="unrelated OCR evidence")
+    assert report.grounding.checked and "seller.name" in report.grounding.unsupported_fields
+    assert any(i.code == "not_grounded" and i.severity == "warning" for i in report.issues)
+    assert all("unrelated OCR evidence" not in i.message for i in report.issues)
+
+
+def test_bad_schema_does_not_claim_ocr_was_checked():
+    from vireceipt.verify import verify_receipt
+
+    report = verify_receipt(None, today=TODAY, ocr_text="OCR exists")
+    assert not report.grounding.checked and report.grounding.unsupported_fields == ()

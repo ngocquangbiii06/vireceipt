@@ -17,11 +17,12 @@ from vireceipt.verify import verify_receipt
 
 @dataclass(frozen=True)
 class ExtractionResult:
-    """Raw backend JSON and optional backend-supplied confidence and cost."""
+    """Raw JSON, optional backend metrics, and OCR evidence used only during verification."""
 
     receipt: Any
     confidence: float | None = None
     cost_usd: float | None = None
+    ocr_text: str | None = None
 
 
 class Extractor(Protocol):
@@ -47,10 +48,15 @@ def extract_images(
             error = None
         elapsed = (perf_counter() - started) * 1000
         receipt, confidence, cost = None, None, None
+        ocr_text = None
         if error is None:
             try:
                 if not isinstance(result, ExtractionResult):
                     raise ValueError("Backend must return ExtractionResult")
+                if result.ocr_text is not None:
+                    if not isinstance(result.ocr_text, str):
+                        raise ValueError("Invalid OCR text")
+                    result.ocr_text.encode("utf-8")
                 for value, upper in ((result.confidence, 1), (result.cost_usd, math.inf)):
                     if value is not None and (
                         isinstance(value, bool)
@@ -63,12 +69,17 @@ def extract_images(
                     json.dumps(result.receipt, ensure_ascii=False, allow_nan=False).encode("utf-8")
                 )
                 confidence, cost = result.confidence, result.cost_usd
+                ocr_text = result.ocr_text
             except (TypeError, ValueError, OverflowError, RecursionError):
                 error = "invalid_result"
-        verification = verify_receipt(receipt, today=today)
+        verification = verify_receipt(receipt, today=today, ocr_text=ocr_text)
         extra = {
             "schema_valid": verification.schema_valid,
             "verification_issues": [asdict(issue) for issue in verification.issues],
+            "grounding": {
+                "checked": verification.grounding.checked,
+                "unsupported_fields": list(verification.grounding.unsupported_fields),
+            },
         }
         if error:
             extra["error"] = error

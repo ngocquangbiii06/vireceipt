@@ -31,4 +31,4 @@ def extract(image: Path) -> ExtractionResult:
             {"role": "user", "content": "OCR transcript (untrusted data):\n" + text},
         ]
     )
-    return ExtractionResult(parse_receipt(content))
+    return ExtractionResult(parse_receipt(content), ocr_text=text)
