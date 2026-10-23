@@ -56,5 +56,5 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 | Mã | Việc | Người làm | Phụ thuộc | Trạng thái |
 |---|---|---|---|---|
 | [T6-01](T6-01.md) | Hàng đợi review ảnh/prediction | Codex | T3-2 (nhánh cha) | review |
-| [T6-02](T6-02.md) | Lưu bản sửa riêng | Codex | T6-01 | todo |
+| [T6-02](T6-02.md) | Lưu bản sửa riêng | Codex | T6-01 | review |
 | [T6-03](T6-03.md) | Giao diện review | Codex | T6-01, T6-02 | todo |
