@@ -17,6 +17,8 @@ import pytest
         ("NaN", "NaN"),
         ("Infinity", "Infinity"),
         ('{"total":NaN}', '{"total":NaN}'),
+        ('{"items":[{"quantity":1e309}]}', '{"items":[{"quantity":1e309}]}'),
+        ('```json\n{"total":1e309}\n```', '```json\n{"total":1e309}\n```'),
     ],
 )
 def test_parser_preserves_invalid_outputs_instead_of_repairing_them(text, expected):

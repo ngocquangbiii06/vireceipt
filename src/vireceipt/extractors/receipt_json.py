@@ -1,6 +1,7 @@
 """Versioned receipt instructions and conservative model-output parsing."""
 
 import json
+import math
 import re
 from typing import Any
 
@@ -29,11 +30,18 @@ def _reject_constant(value: str) -> None:
     raise ValueError("Non-finite constants are not JSON")
 
 
+def _finite_float(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        raise ValueError("Unrepresentable JSON number")
+    return parsed
+
+
 def parse_receipt(text: str) -> Any:
     """Parse a complete JSON answer, retaining raw text when it cannot be parsed."""
     fenced = re.fullmatch(r"\s*```(?:json)?\s*\n(.*?)\n```\s*", text, re.DOTALL | re.IGNORECASE)
     candidate = fenced.group(1) if fenced else text
     try:
-        return json.loads(candidate, parse_constant=_reject_constant)
+        return json.loads(candidate, parse_constant=_reject_constant, parse_float=_finite_float)
     except (ValueError, RecursionError):
         return text
