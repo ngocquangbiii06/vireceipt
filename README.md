@@ -84,6 +84,7 @@ How to label: [docs/labeling-guide.md](docs/labeling-guide.md). Data layout: [da
 uv sync
 uv run pytest
 uv run ruff check . && uv run ruff format --check .
+uv run vireceipt-check-labels tests/fixtures/gold.jsonl
 
 # score predictions against labels (fixtures shown; real data lives in data/, not in git)
 uv run vireceipt-eval --gold tests/fixtures/gold.jsonl --pred tests/fixtures/pred.jsonl \
