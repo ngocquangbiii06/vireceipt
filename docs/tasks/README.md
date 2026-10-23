@@ -10,7 +10,7 @@ sang `done` khi merge.
 | [T1-01](T1-01.md) | Kiểm tra giấy phép và cấu trúc nguồn dữ liệu, mô hình | Chủ repo (+AI tra cứu) | — | todo |
 | [T1-02](T1-02.md) | Hàm kiểm tra nhất quán nhãn + lệnh `vireceipt-check-labels` | Codex | — | review |
 | [T1-03](T1-03.md) | Chia tập theo cửa hàng: lệnh `vireceipt-split` | Codex | — | review |
-| [T1-04](T1-04.md) | App gán nhãn (Streamlit) | Codex | T1-02 | todo |
+| [T1-04](T1-04.md) | App gán nhãn (Streamlit) | Codex | T1-02 | doing |
 | [T1-05](T1-05.md) | Chụp, che, gán nhãn ≥100 hóa đơn; chia tập; đóng băng `test` | Chủ repo | T1-02, T1-03, T1-04 | todo |
 
 ## Đợt
