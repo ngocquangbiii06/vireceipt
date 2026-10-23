@@ -27,7 +27,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | T3-2 | `wave/T3-2` (nối từ `wave/T3-1`) | T3-03, T3-04 | review |
 | T6-1 | `wave/T6-1` (nối từ `wave/T3-2`) | T6-01, T6-02, T6-03 | review |
 | T6-2 | `wave/T6-2` (nối từ `wave/T6-1`) | T6-04 | review |
-| T6-3 | `wave/T6-3` (nối từ `wave/T6-2`) | T6-05, T6-06 | doing |
+| T6-3 | `wave/T6-3` (nối từ `wave/T6-2`) | T6-05, T6-06, T6-07 | doing |
 
 ## Sau T1
 
@@ -62,4 +62,5 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 | [T6-03](T6-03.md) | Giao diện review | Codex | T6-01, T6-02 | review |
 | [T6-04](T6-04.md) | Unicode JSONL trong app gán nhãn | Codex | T1-04/T6-1 (nhánh cha) | review |
 | [T6-05](T6-05.md) | Kiểm ảnh upload/dependency API | Codex | — | review |
-| [T6-06](T6-06.md) | API extraction local | Codex | T6-05 | todo |
+| [T6-06](T6-06.md) | API extraction local | Codex | T6-05 | review |
+| [T6-07](T6-07.md) | Smoke API HTTP và hướng dẫn vận hành | Codex | T6-06 | todo |
