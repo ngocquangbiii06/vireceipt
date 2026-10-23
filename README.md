@@ -239,6 +239,36 @@ accepts a receipt automatically. Corrections are atomically upserted by ID in
 `data/review/corrections.jsonl` as candidate labels, separate from all/train/val/test. Dataset
 promotion and store-based splitting remain manual. This app supports one local writer at a time.
 
+## Local extraction API
+
+Install the optional API group and select the server's backend (PowerShell):
+
+```powershell
+uv sync --group api
+$env:VIRECEIPT_API_BACKEND = "vlm" # or "ocr-llm" (also needs --group ocr)
+# Configure the corresponding VIRECEIPT_VLM_* or VIRECEIPT_LLM_* variables shown above.
+uv run --group api uvicorn vireceipt.api:create_app --factory --host 127.0.0.1 --workers 1
+curl.exe "http://127.0.0.1:8000/v1/extract?receipt_id=r0001" `
+    -H "Content-Type: image/png" --data-binary "@data/images/r0001.png"
+```
+
+`GET /healthz` reports process liveness; model configuration and reachability are checked on
+extraction, without paid health probes. `POST /v1/extract` takes a required `receipt_id` (`r` plus
+four ASCII digits) and a raw JPEG/PNG body with matching Content-Type. The body is streamed with
+a 10 MiB bound; Pillow checks one frame, at most 25 million pixels, and decodes it before inference.
+The backend runs in a thread pool, one call at a time per app; temporary images are removed after
+each request. The server chooses its backend through environment configuration.
+
+The response is the same flat prediction object used by the eval harness, including verification
+issues and grounding metadata. Every decision remains `review`. Invalid schema alone returns 200
+with the raw receipt; backend/metadata failures return 502 with a null receipt and a sanitized
+error code. Bad IDs/images use 4xx responses; upload limits use 413. No transcript is included.
+
+This is a local stateless interface. PostgreSQL storage, authentication and public deployment are
+still planned. Tests use synthetic images, local Chat API stubs and a real loopback Uvicorn server;
+live provider compatibility and extraction accuracy remain unmeasured. The raw-body route uses
+[FastAPI's Request interface](https://fastapi.tiangolo.com/advanced/using-request-directly/).
+
 ## Repository layout
 
 ```
