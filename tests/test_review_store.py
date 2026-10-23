@@ -69,7 +69,7 @@ def test_bad_correction_does_not_create_or_replace_file(correction_input, scenar
 
 
 def test_atomic_write_failure_preserves_existing_corrections(correction_input, monkeypatch):
-    from vireceipt.labeling import form
+    from vireceipt import review_store
     from vireceipt.review_store import save_correction
 
     root, item, receipt, metadata = correction_input
@@ -80,7 +80,7 @@ def test_atomic_write_failure_preserves_existing_corrections(correction_input, m
     def fail_replace(*args):
         raise OSError("synthetic disk failure")
 
-    monkeypatch.setattr(form.os, "replace", fail_replace)
+    monkeypatch.setattr(review_store.os, "replace", fail_replace)
     with pytest.raises(OSError):
         save_correction(root, item, json.dumps(receipt), notes="changed", **metadata)
     assert path.read_bytes() == before
@@ -112,3 +112,15 @@ def test_symlink_output_is_rejected_before_access(correction_input):
         pytest.skip("Symlinks unavailable on this host")
     with pytest.raises(ValueError):
         load_corrections(root)
+
+
+@pytest.mark.parametrize("separator", ["\u0085", "\u2028", "\u2029"])
+def test_unicode_line_separators_survive_load_and_later_upsert(correction_input, separator):
+    from vireceipt.review_store import load_corrections, save_correction
+
+    root, item, receipt, metadata = correction_input
+    notes = "line A" + separator + "line B"
+    save_correction(root, item, json.dumps(receipt), notes=notes, **metadata)
+    assert load_corrections(root)[item.id]["notes"] == notes
+    save_correction(root, item, json.dumps(receipt), notes=notes + " updated", **metadata)
+    assert load_corrections(root)[item.id]["notes"] == notes + " updated"

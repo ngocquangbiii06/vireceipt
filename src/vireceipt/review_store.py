@@ -1,13 +1,14 @@
 """Save candidate labels in one local corrections file, outside all dataset splits."""
 
 import json
+import os
 import re
+import tempfile
 from datetime import date
 from pathlib import Path
 from typing import Any
 
 from vireceipt.eval.io import QUALITY_TAGS
-from vireceipt.labeling.form import upsert_record
 from vireceipt.review_queue import ReviewItem
 from vireceipt.schema import validate_receipt
 from vireceipt.verify import Verification, verify_receipt
@@ -62,7 +63,7 @@ def load_corrections(data_dir: Path) -> dict[str, dict[str, Any]]:
     if not path.exists():
         return {}
     records = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8").split("\n"):
         if not line.strip():
             continue
         record = json.loads(line)
@@ -97,7 +98,20 @@ def save_correction(
         notes=notes,
     )
     _validate_record(record, root)
-    load_corrections(root)  # Never overwrite a corrupt existing candidate-label file.
+    records = load_corrections(root)  # Never overwrite a corrupt candidate-label file.
     report = verify_receipt(record["receipt"], today=today)
-    upsert_record(path, record)
+    records[item.id] = record
+    payload = "".join(
+        json.dumps(row, ensure_ascii=False, allow_nan=False) + "\n" for row in records.values()
+    ).encode("utf-8")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(payload)
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
     return report
