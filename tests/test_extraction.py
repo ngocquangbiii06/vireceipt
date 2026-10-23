@@ -43,15 +43,21 @@ def test_runner_preserves_outputs_and_continues_after_backend_failure(receipt, m
         ("confidence", math.nan),
         ("cost_usd", -1),
         ("cost_usd", math.inf),
+        pytest.param("cost_usd", 10**1000, id="huge-cost"),
+        pytest.param("confidence", 10**1000, id="huge-confidence"),
     ],
 )
 def test_invalid_backend_metadata_is_an_explicit_failure(receipt, field, value):
     from vireceipt.extraction import ExtractionResult, extract_images
 
-    (prediction,) = extract_images(
-        {"r0001": Path("a.png")}, lambda image: ExtractionResult(receipt, **{field: value})
+    prediction, following = extract_images(
+        {"r0001": Path("a.png"), "r0002": Path("b.png")},
+        lambda image: ExtractionResult(
+            receipt, **({field: value} if image.name == "a.png" else {})
+        ),
     )
     assert prediction.receipt is None and prediction.extra["error"] == "invalid_result"
+    assert following.receipt == receipt and "error" not in following.extra
 
 
 def test_non_json_result_fails_but_supplied_confidence_and_cost_are_kept(receipt):
@@ -76,6 +82,50 @@ def test_predictions_are_snapshots_if_backend_reuses_its_dictionary(receipt):
 
     results = extract_images({"r0001": Path("a.png"), "r0002": Path("b.png")}, backend)
     assert [p.receipt["total"] for p in results] == [10, 20]
+
+
+def test_non_utf8_backend_output_fails_one_image_not_the_whole_write(receipt, tmp_path):
+    from vireceipt.extraction import ExtractionResult, extract_images, write_predictions
+
+    predictions = extract_images(
+        {"r0001": Path("a.png"), "r0002": Path("b.png")},
+        lambda image: ExtractionResult("\ud800" if image.name == "a.png" else receipt),
+    )
+    assert predictions[0].receipt is None and predictions[0].extra["error"] == "invalid_result"
+    output = tmp_path / "pred.jsonl"
+    write_predictions(predictions, output)
+    assert len(load_predictions(output)) == 2
+    assert load_predictions(output)[1].receipt == receipt
+
+
+def test_deep_json_is_written_without_recursive_dataclass_conversion(tmp_path):
+    from vireceipt.extraction import ExtractionResult, extract_images, write_predictions
+
+    raw = 1
+    for _ in range(1500):
+        raw = [raw]
+    predictions = extract_images({"r0001": Path("a.png")}, lambda image: ExtractionResult(raw))
+    output = tmp_path / "pred.jsonl"
+    write_predictions(predictions, output)
+    (prediction,) = load_predictions(output)
+    value = prediction.receipt
+    for _ in range(1500):
+        value = value[0]
+    assert value == 1 and prediction.extra["schema_valid"] is False
+
+
+def test_unserializable_depth_fails_one_image_and_continues(receipt):
+    from vireceipt.extraction import ExtractionResult, extract_images
+
+    raw = 1
+    for _ in range(10000):
+        raw = [raw]
+    bad, good = extract_images(
+        {"r0001": Path("a.png"), "r0002": Path("b.png")},
+        lambda image: ExtractionResult(raw if image.name == "a.png" else receipt),
+    )
+    assert bad.receipt is None and bad.extra["error"] == "invalid_result"
+    assert good.receipt == receipt
 
 
 def test_writer_is_utf8_atomic_and_loadable_by_eval(receipt, tmp_path, monkeypatch):

@@ -5,7 +5,7 @@ import math
 import os
 import tempfile
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Protocol
@@ -57,10 +57,10 @@ def extract_images(images: Mapping[str, Path], extractor: Extractor) -> list[Pre
                     ):
                         raise ValueError("Invalid confidence or cost")
                 receipt = json.loads(
-                    json.dumps(result.receipt, ensure_ascii=False, allow_nan=False)
+                    json.dumps(result.receipt, ensure_ascii=False, allow_nan=False).encode("utf-8")
                 )
                 confidence, cost = result.confidence, result.cost_usd
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, OverflowError, RecursionError):
                 error = "invalid_result"
         extra = {"schema_valid": is_valid_receipt(receipt)}
         if error:
@@ -83,7 +83,7 @@ def write_predictions(predictions: Sequence[Prediction], output: str | Path) -> 
     """Atomically write UTF-8 predictions in the existing eval JSONL format."""
     lines = []
     for prediction in predictions:
-        row = asdict(prediction)
+        row = vars(prediction).copy()
         row.update(row.pop("extra"))
         lines.append(json.dumps(row, ensure_ascii=False, allow_nan=False) + "\n")
     payload = "".join(lines).encode("utf-8")
