@@ -25,6 +25,10 @@ label = [
   "streamlit>=1.40,<2",
   "pillow>=11,<12",
 ]
+ocr = [
+  "paddleocr==3.3.3",
+  "paddlepaddle==3.3.1",
+]
 
 [build-system]
 requires = ["hatchling>=1.24"]

@@ -82,6 +82,8 @@ How to label: [docs/labeling-guide.md](docs/labeling-guide.md). Data layout: [da
 
 ```bash
 uv sync
+# Optional CPU OCR baseline (downloads dependencies; first use also downloads model weights)
+# uv sync --group ocr
 uv run pytest
 uv run ruff check . && uv run ruff format --check .
 uv run vireceipt-check-labels tests/fixtures/gold.jsonl
@@ -165,6 +167,24 @@ Responses must finish with `stop`; refusals, truncation, HTTP/network errors and
 Provider billing, quotas, model/JSON-mode support and accuracy need verification on `val` before
 reporting any baseline. The adapter follows the [Chat Completions protocol](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
 also used in [Qwen's serving examples](https://github.com/QwenLM/Qwen3-VL).
+
+CPU OCR is an optional dependency group:
+
+```bash
+uv sync --group ocr
+uv run --group ocr python -c "from pathlib import Path; from vireceipt.ocr import read_text; print(read_text(Path('data/images/r0001.jpg')))"
+```
+
+It uses PaddleOCR 3.3.3, PaddlePaddle 3.3.1, `PP-OCRv5_mobile_det` and
+`latin_PP-OCRv5_mobile_rec`. The engine defaults to CPU; `VIRECEIPT_OCR_DEVICE` can select
+another supported device explicitly. Orientation/unwarping modules are disabled in this baseline.
+oneDNN is also disabled to avoid a Paddle 3.3.1 CPU inference error reproduced on Windows.
+Models download to Paddle's cache on first use and are never committed. Package and model-card
+licenses are Apache-2.0 ([PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/main/LICENSE),
+[PaddlePaddle](https://github.com/PaddlePaddle/Paddle/blob/develop/LICENSE),
+[detection model](https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_det),
+[recognition model](https://huggingface.co/PaddlePaddle/latin_PP-OCRv5_mobile_rec)).
+OCR text keeps line order and empty lines. OCR scores are not receipt-level confidence.
 
 ## Repository layout
 
