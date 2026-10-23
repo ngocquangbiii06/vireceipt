@@ -69,8 +69,33 @@ def test_vietnamese_diacritics_are_not_erased(grounded_receipt):
     assert "items.0.name" in check_grounding(grounded_receipt, "Sua tuoi").unsupported_fields
 
 
+def test_literal_date_presence_is_independent_of_calendar_validity(grounded_receipt):
+    from vireceipt.grounding import check_grounding
+
+    grounded_receipt["issued_at"]["date"] = "2026-02-31"
+    report = check_grounding(grounded_receipt, "Ngày: 2026-02-31")
+    assert "issued_at.date" not in report.unsupported_fields
+
+
 @pytest.mark.parametrize("printed", ["2k", "2 VND"])
 def test_explicit_money_token_does_not_ground_item_quantity(grounded_receipt, printed):
+    from vireceipt.grounding import check_grounding
+
+    grounded_receipt["items"][0]["quantity"] = 2
+    assert "items.0.quantity" in check_grounding(grounded_receipt, printed).unsupported_fields
+
+
+@pytest.mark.parametrize("field,value", [("phone", "0901234567"), ("tax_code", "0312345678")])
+@pytest.mark.parametrize("position", ["prefix", "suffix"])
+def test_contact_is_not_part_of_a_longer_separated_number(grounded_receipt, field, value, position):
+    from vireceipt.grounding import check_grounding
+
+    printed = f"1 {value}" if position == "prefix" else f"{value} 89"
+    assert f"seller.{field}" in check_grounding(grounded_receipt, printed).unsupported_fields
+
+
+@pytest.mark.parametrize("printed", ["2 VND.", "2 VND,", "2 đồng.", "2 ₫.", "2 đ.", "2 k.", "2 d"])
+def test_currency_punctuation_does_not_turn_money_into_quantity(grounded_receipt, printed):
     from vireceipt.grounding import check_grounding
 
     grounded_receipt["items"][0]["quantity"] = 2

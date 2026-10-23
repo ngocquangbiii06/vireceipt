@@ -10,7 +10,7 @@ from vireceipt.normalize import digits_only, norm_loose, norm_text, parse_money
 
 _NUMBER = re.compile(
     r"(?<![\w.,])[+-]?\d+(?:[.,]\d+)*(?:[ \u00a0]\d{3})*"
-    r"(?:\s*(?:vnđ|vnd|đồng|dong|đ|₫|k))?(?![\w.,])",
+    r"(?:[ \t]*(?:vnđ|vnd|đồng|dong|đ|₫|d|k)(?!\w)|(?!\w|[.,]\d))",
     re.IGNORECASE,
 )
 _PAYMENT = {
@@ -20,6 +20,7 @@ _PAYMENT = {
     "e_wallet": ("ví điện tử", "e wallet", "momo", "zalopay"),
     "other": (),
 }
+_CONTACT = re.compile(r"\d(?:[ \t\u00a0().+-]*\d)*")
 
 
 @dataclass(frozen=True)
@@ -36,13 +37,15 @@ def _text_present(value: str, normalized: str) -> bool:
 
 
 def _date_present(value: str, text: str) -> bool:
+    if re.search(rf"(?<!\d){re.escape(value)}(?!\d)", text):
+        return True
     try:
         parsed = date.fromisoformat(value)
     except ValueError:
         return False
     day = f"0?{parsed.day}" if parsed.day < 10 else str(parsed.day)
     month = f"0?{parsed.month}" if parsed.month < 10 else str(parsed.month)
-    pattern = rf"(?<!\d)(?:{re.escape(value)}|{day}[-/.]{month}[-/.]{parsed.year})(?!\d)"
+    pattern = rf"(?<!\d){day}[-/.]{month}[-/.]{parsed.year}(?!\d)"
     return re.search(pattern, text) is not None
 
 
@@ -51,6 +54,7 @@ def check_grounding(receipt: dict[str, Any], ocr_text: str | None) -> GroundingR
     if ocr_text is None or not ocr_text.strip():
         return GroundingResult(False)
     normalized = norm_loose(ocr_text)
+    contacts = {digits_only(match.group()) for match in _CONTACT.finditer(ocr_text)}
     money, quantities = set(), set()
     for match in _NUMBER.finditer(ocr_text):
         token = match.group()
@@ -58,7 +62,7 @@ def check_grounding(receipt: dict[str, Any], ocr_text: str | None) -> GroundingR
             amount = parse_money(token)
             if amount is not None:
                 money.add(amount)
-            if re.search(r"(vnđ|vnd|đồng|dong|đ|₫|k)$", token, re.IGNORECASE):
+            if re.search(r"(vnđ|vnd|đồng|dong|đ|₫|d|k)$", token, re.IGNORECASE):
                 continue
             number = norm_text(token).replace(" ", "")
             quantities.add(Decimal(number.replace(",", ".")))
@@ -75,8 +79,7 @@ def check_grounding(receipt: dict[str, Any], ocr_text: str | None) -> GroundingR
             continue
         if key in {"phone", "tax_code"}:
             digits = digits_only(value)
-            pattern = r"(?<!\d)" + r"[\s().+-]*".join(map(re.escape, digits)) + r"(?!\d)"
-            supported = bool(digits) and re.search(pattern, ocr_text) is not None
+            supported = bool(digits) and digits in contacts
         else:
             supported = _text_present(value, normalized)
         check(f"seller.{key}", value, supported)
