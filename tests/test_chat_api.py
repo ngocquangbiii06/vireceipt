@@ -77,9 +77,28 @@ def test_http_errors_do_not_retry_follow_redirect_or_disclose_body(chat_server, 
 
 
 @pytest.mark.parametrize(
+    "reply",
+    [
+        (None, b"private-status-line\r\n\r\n", {}),
+        (200, b"private-chunk\r\n", {"Transfer-Encoding": "chunked"}),
+        (200, b"4\r\nab", {"Transfer-Encoding": "chunked"}),
+    ],
+)
+def test_malformed_http_wire_is_sanitized(chat_server, reply):
+    from vireceipt.extractors.chat_api import ChatAPIError, ChatClient
+
+    chat_server.replies = [reply]
+    with pytest.raises(ChatAPIError, match="^network_error$"):
+        ChatClient(chat_server.url, "test").complete([])
+
+
+@pytest.mark.parametrize(
     "changes",
     [
         {"base_url": "http://example.com/v1"},
+        {"base_url": "http://127.0.0.1:private-port/v1"},
+        {"base_url": "http://127.0.0.1:65536/v1"},
+        {"base_url": "http://127.0.0.1:0/v1"},
         {"base_url": "https://user:secret@example.com/v1"},
         {"base_url": "https://example.com/v1?secret=value"},
         {"base_url": "https://example.com/v1#x"},

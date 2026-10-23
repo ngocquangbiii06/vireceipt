@@ -4,6 +4,7 @@ import ipaddress
 import json
 import math
 from dataclasses import dataclass, field
+from http.client import HTTPException
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
@@ -30,7 +31,11 @@ class ChatClient:
     max_tokens: int = 4096
 
     def __post_init__(self) -> None:
-        url = urlsplit(self.base_url)
+        try:
+            url = urlsplit(self.base_url)
+            port = url.port
+        except ValueError:
+            raise ValueError("Invalid chat configuration") from None
         host = url.hostname
         try:
             loopback = host == "localhost" or ipaddress.ip_address(host or "").is_loopback
@@ -38,6 +43,7 @@ class ChatClient:
             loopback = False
         if (
             not host
+            or (port is not None and not 1 <= port <= 65535)
             or url.scheme not in {"https", "http"}
             or (url.scheme == "http" and not loopback)
             or url.username is not None
@@ -82,7 +88,7 @@ class ChatClient:
             status = error.code
             error.close()
             raise ChatAPIError(f"http_status_{status}") from None
-        except (OSError, URLError, ValueError):
+        except (OSError, URLError, ValueError, HTTPException):
             raise ChatAPIError("network_error") from None
         try:
             if len(raw) > 4 * 1024 * 1024:

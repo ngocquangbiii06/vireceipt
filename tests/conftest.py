@@ -40,6 +40,9 @@ def chat_server():
             if len(state.replies) > 1:
                 state.replies.pop(0)
             payload = response if isinstance(response, bytes) else json.dumps(response).encode()
+            if status is None:
+                self.wfile.write(payload)
+                return
             self.send_response(status)
             for key, value in headers.items():
                 self.send_header(key, value)
