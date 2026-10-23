@@ -8,17 +8,17 @@ ViReceipt đọc ảnh hóa đơn bán lẻ tiếng Việt thành JSON, **tự k
 không chắc**. Đây là project portfolio cá nhân: mọi con số công bố phải chạy ra từ code trong repo.
 
 Chia vai:
-- **Codex**: nhận task card, viết code + test, chạy kiểm tra, ghi bàn giao.
-- **Claude**: viết task card, review diff (`/review-task`). Claude **không sửa code** trên nhánh của
-  Codex.
-- **Chủ repo** (người): duyệt kế hoạch, merge vào `main`.
+- **Codex**: nhận một đợt task, viết code + test, chạy kiểm tra, ghi bàn giao, tự sửa theo review.
+- **Claude**: viết task card, review cả đợt (`/review-batch`), ghi quyết định của chủ repo vào task
+  card. Claude **không sửa code** trên nhánh của Codex.
+- **Chủ repo** (người): duyệt task card, giao đợt, trả lời mục "Cần chủ repo quyết", merge vào `main`.
 
 ## 2. Đọc gì trước khi làm (theo thứ tự)
 
-1. `docs/tasks/README.md` — bảng task và trạng thái.
-2. Task card được giao: `docs/tasks/<MÃ>.md`.
+1. `docs/tasks/README.md` — bảng task, trạng thái và bảng đợt.
+2. Task card được giao: `docs/tasks/<MÃ>.md`, nhất là mục "Quyết định đã chốt".
 3. Bàn giao gần nhất của task đó (nếu có): `docs/handoffs/*-<MÃ>-*.md`.
-4. Kết quả review gần nhất (nếu có): `.reviews/<MÃ>.md`.
+4. Kết quả review gần nhất (nếu có): `.reviews/<đợt>.md` (đợt) hoặc `.reviews/<MÃ>.md` (task lẻ).
 5. Khi task cần: `README.md` (spec), `docs/labeling-guide.md`, `docs/adr/`.
 
 ## 3. Bản đồ repo
@@ -49,8 +49,8 @@ uv run vireceipt-freeze --help
 
 ## 5. Luật bắt buộc
 
-1. **Chỉ sửa file nằm trong mục "Được phép sửa" của task card.** Cần sửa file khác: dừng lại, ghi
-   vào mục "Câu hỏi" của bàn giao.
+1. **Chỉ sửa file nằm trong mục "Được phép sửa" của task card.** Cần sửa file khác: dừng task đó, ghi
+   vào mục "Câu hỏi" của bàn giao (xem §6 bước 4).
 2. **Không commit** ảnh, nhãn, dữ liệu, trọng số mô hình, `.env`, khóa API. `data/` đã bị ignore — không
    dùng `git add -f`.
 3. **Không đọc, in hay phân tích nhãn tập test** (`data/labels/test.jsonl`), không chọn ngưỡng/prompt/mô
@@ -63,25 +63,37 @@ uv run vireceipt-freeze --help
    trong bàn giao.
 7. **Không làm việc trên `main`.** Không merge, không push `--force`, không sửa lịch sử git.
 8. **Diff nhỏ.** Một task nên dưới khoảng 300 dòng thay đổi (không tính file khóa `uv.lock`). Lớn hơn
-   thì đề xuất tách task.
+   thì đề xuất tách task. Một đợt tối đa 4 task và khoảng 1.000 dòng.
 
-## 6. Quy trình một task (Codex)
+## 6. Quy trình một đợt (Codex)
 
-1. Đọc mục 2. Kiểm tra task ở trạng thái `todo` và các task phụ thuộc đã `done`.
-2. **Tóm tắt kế hoạch** (các bước, file sẽ sửa, câu hỏi còn mở). **Chưa code cho tới khi chủ repo
-   đồng ý.**
-3. Tạo nhánh `<loại>/<MÃ>-<mô-tả-ngắn>` từ `main`, ví dụ `feat/T1-03-label-checks`.
-4. Làm từng bước nhỏ; commit theo Conventional Commits có mã task:
-   `feat(labeling): add arithmetic checks [T1-03]`.
-5. Viết test cho logic mới. Chạy `uv run ruff format . && uv run ruff check . && uv run pytest`.
-6. Đánh dấu tiêu chí đã xong trong task card; đổi trạng thái task trong `docs/tasks/README.md` thành
-   `review`.
-7. **Ghi bàn giao** từ `docs/handoffs/_template.md` thành
-   `docs/handoffs/<YYYY-MM-DD-HHMM>-<MÃ>-codex.md`, **dán nguyên văn** kết quả lệnh kiểm tra. Commit.
-8. Dừng. Báo chủ repo nhờ Claude chạy `/review-task <MÃ> <nhánh>`.
+Chủ repo giao việc theo **đợt**: vài task làm liền trên một nhánh, review một lần, merge một lần. Task
+card ở trạng thái `todo` là kế hoạch đã duyệt — **không chờ duyệt kế hoạch**.
 
-**Sửa sau review:** đọc `.reviews/<MÃ>.md`, sửa hết mục **Phải sửa** (và **Nên sửa** nếu hợp lý),
-chạy lại kiểm tra, thêm một mục "Sửa sau review" vào cuối file bàn giao, commit, báo lại.
+1. Đọc mục 2 cho mọi task trong đợt (đợt ghi ở bảng "Đợt" trong `docs/tasks/README.md`). Xếp task theo
+   phụ thuộc: task phụ thuộc phải nằm trong đợt và làm sau, hoặc đã `done`.
+2. Tạo nhánh `wave/<tên-đợt>` từ `main`, ví dụ `wave/T1-1`. Cả đợt dùng một nhánh.
+3. Với từng task, theo thứ tự:
+   1. Đổi trạng thái thành `doing`. Làm từng bước nhỏ; commit theo Conventional Commits có mã task:
+      `feat(labeling): add arithmetic checks [T1-03]`. **Mỗi commit chỉ thuộc một task.**
+   2. Viết test cho logic mới. Chạy `uv run ruff format . && uv run ruff check . && uv run pytest`.
+      **Chưa xanh thì không sang task sau.**
+   3. Đánh dấu tiêu chí đã xong trong task card; đổi trạng thái thành `review`.
+   4. **Ghi bàn giao** từ `docs/handoffs/_template.md` thành
+      `docs/handoffs/<YYYY-MM-DD-HHMM>-<MÃ>-codex.md`, **dán nguyên văn** kết quả lệnh kiểm tra. Commit.
+4. **Bị chặn** (câu hỏi chưa có trong "Quyết định đã chốt", cần sửa file ngoài phạm vi): ghi câu hỏi
+   vào bàn giao của task đó, để trạng thái `doing`, **bỏ qua task đó và các task phụ thuộc nó**, làm
+   tiếp task khác trong đợt. Không dừng cả đợt vì một câu hỏi.
+5. Hết việc thì dừng và báo chủ repo, ngắn gọn: task nào `review`, task nào bị chặn vì câu hỏi gì, và
+   câu "Nhờ Claude chạy `/review-batch wave/<tên-đợt>`".
+
+**Sửa sau review:** đọc `.reviews/<tên-đợt>.md`. Sửa hết **Phải sửa** và **Nên sửa** của mọi task,
+trừ mục nằm trong "Cần chủ repo quyết" mà task card chưa có quyết định — mục đó để nguyên. Mỗi task
+sửa trong commit riêng có mã task, chạy lại kiểm tra, thêm mục "Sửa sau review" vào cuối bàn giao của
+task đó, commit. Xong thì báo chủ repo nhờ Claude chạy lại `/review-batch` (lần này chỉ xem phần mới).
+
+**Task lẻ** (task khó: metric, khóa tập test, thiết kế): chủ repo có thể giao một task trên nhánh
+`<loại>/<MÃ>-<mô-tả>` và review bằng `/review-task <MÃ> <nhánh>`. Các bước như trên với một task.
 
 ## 7. Định nghĩa XONG
 
@@ -93,7 +105,8 @@ chạy lại kiểm tra, thêm một mục "Sửa sau review" vào cuối file b
 
 ## 8. Khi không chắc
 
-Không đoán. Ghi câu hỏi vào mục "Câu hỏi" của bàn giao và dừng. Ưu tiên giải pháp đơn giản, chạy được.
+Không đoán. Ghi câu hỏi vào mục "Câu hỏi" của bàn giao, bỏ qua task đó (xem §6 bước 4) và làm task
+khác trong đợt; hết task làm được thì dừng. Ưu tiên giải pháp đơn giản, chạy được.
 
 ## 9. Phong cách
 

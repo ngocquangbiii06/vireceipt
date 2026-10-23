@@ -32,7 +32,7 @@ $ uv run pytest
 
 ## Câu hỏi cho chủ repo
 
-- …
+- … (câu hỏi chặn task thì ghi rõ "chặn"; task để `doing` và đã chuyển sang task nào)
 
 ## Bước tiếp theo
 
