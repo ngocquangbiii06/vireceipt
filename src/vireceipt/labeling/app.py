@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> None:
         records = (
             [
                 json.loads(line)
-                for line in labels.read_text(encoding="utf-8").splitlines()
+                for line in labels.read_text(encoding="utf-8").split("\n")
                 if line.strip()
             ]
             if labels.exists()

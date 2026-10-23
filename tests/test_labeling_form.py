@@ -204,3 +204,66 @@ def test_app_saves_two_images_and_edits_without_opening_splits(tmp_path, monkeyp
     assert [row["id"] for row in saved] == ["r0001", "r0002"]
     assert saved[0]["notes"] == "đã sửa bằng AppTest"
     assert saved[0]["image"] == "images/a.png" and saved[1]["image"] == "images/b.jpg"
+
+
+@pytest.mark.parametrize("separator", ["\u0085", "\u2028", "\u2029"])
+def test_jsonl_unicode_separators_survive_label_reads_and_upsert(values, tmp_path, separator):
+    from vireceipt.labeling.form import build_record, unlabeled_images, upsert_record
+
+    images = tmp_path / "images"
+    images.mkdir()
+    for name in ("a.png", "b.png"):
+        (images / name).touch()
+    path = tmp_path / "labels/all.jsonl"
+    first = build_record(values)
+    first["notes"] = "line A" + separator + "line B"
+    upsert_record(path, first)
+    assert unlabeled_images(images, path) == [images / "b.png"]
+    second = build_record(dict(values, id="r0002", image="images/b.png"))
+    upsert_record(path, second)
+    with path.open(encoding="utf-8") as stream:
+        assert [json.loads(line) for line in stream] == [first, second]
+
+
+def test_app_opens_and_edits_existing_unicode_jsonl(values, tmp_path, monkeypatch):
+    testing = pytest.importorskip("streamlit.testing.v1")
+    image = pytest.importorskip("PIL.Image")
+    from pathlib import Path
+
+    from vireceipt.labeling.form import build_record, upsert_record
+
+    class FixedDate(date):
+        @classmethod
+        def today(cls):
+            return date(2026, 10, 23)
+
+    monkeypatch.setattr("vireceipt.checks.date", FixedDate)
+    images = tmp_path / "images"
+    images.mkdir()
+    image.new("RGB", (40, 20), "blue").save(images / "a.png")
+    path = tmp_path / "labels/all.jsonl"
+    record = build_record(values)
+    record["notes"] = "line A\u2028line B"
+    upsert_record(path, record)
+    original_open = Path.open
+
+    def guard(path, *args, **kwargs):
+        assert path not in {tmp_path / "labels" / f"{s}.jsonl" for s in ("train", "val", "test")}
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", guard)
+
+    def launch(data_dir):
+        from vireceipt.labeling.app import main
+
+        main(["--data", data_dir])
+
+    app = testing.AppTest.from_function(launch, args=(str(tmp_path),), default_timeout=45).run()
+    assert not app.exception and not app.error
+    app.radio[0].set_value("Sửa nhãn").run()
+    assert app.text_area[0].value == record["notes"]
+    app.text_area[0].input("đã sửa qua AppTest")
+    next(button for button in app.button if button.label == "Lưu").click().run()
+    assert not app.exception and app.success
+    with path.open(encoding="utf-8") as stream:
+        assert json.loads(next(stream))["notes"] == "đã sửa qua AppTest"
