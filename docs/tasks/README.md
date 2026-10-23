@@ -20,7 +20,14 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | Đợt | Nhánh | Task (theo thứ tự) | Trạng thái |
 |---|---|---|---|
 | T1-1 | `wave/T1-1` | T1-02 (sửa sau review), T1-03, T1-04 | review |
+| T2-1 | `wave/T2-1` (nối từ `wave/T1-1`) | T2-01, T2-02 | doing |
 
 ## Sau T1
 
-Viết task card tuần T2 (baseline OCR + LLM, VLM API) khi T1-01 đã có kết luận về dữ liệu.
+Chủ repo cho phép làm trước phần độc lập dữ liệu và tự review ngày 2026-10-23.
+Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệu thật của T1-05.
+
+| Mã | Việc | Người làm | Phụ thuộc | Trạng thái |
+|---|---|---|---|---|
+| [T2-01](T2-01.md) | Hợp đồng extractor, runner và writer prediction | Codex | Eval harness hiện có | review |
+| [T2-02](T2-02.md) | CLI manifest ảnh và adapter extractor | Codex | T2-01 (cùng đợt) | todo |
