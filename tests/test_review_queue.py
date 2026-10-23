@@ -95,3 +95,14 @@ def test_queue_retains_schema_invalid_receipt(review_files):
     assert (
         load_review_queue(root, manifest, predictions)[0].prediction.receipt == "invalid model JSON"
     )
+
+
+def test_queue_cannot_use_corrections_as_original_predictions(review_files):
+    from vireceipt.review_queue import load_review_queue
+
+    root, manifest, predictions, _ = review_files
+    corrections = root / "review/corrections.jsonl"
+    corrections.parent.mkdir()
+    corrections.write_bytes(predictions.read_bytes())
+    with pytest.raises(ValueError, match="corrections"):
+        load_review_queue(root, manifest, corrections)

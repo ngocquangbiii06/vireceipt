@@ -24,6 +24,8 @@ def _input_path(root: Path, path: Path) -> Path:
     relative = resolved.relative_to(root)
     if not relative.parts or relative.parts[0].casefold() == "labels":
         raise ValueError("Review inputs must be image manifests and predictions, not labels")
+    if tuple(part.casefold() for part in relative.parts) == ("review", "corrections.jsonl"):
+        raise ValueError("Review inputs cannot be the corrections output")
     return resolved
 
 
