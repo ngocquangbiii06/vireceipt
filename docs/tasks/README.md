@@ -25,7 +25,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | T2-3 | `wave/T2-3` (nối từ `wave/T2-2`) | T2-06, T2-07 | review |
 | T3-1 | `wave/T3-1` (nối từ `wave/T2-3`) | T3-01, T3-02 | review |
 | T3-2 | `wave/T3-2` (nối từ `wave/T3-1`) | T3-03, T3-04 | review |
-| T6-1 | `wave/T6-1` (nối từ `wave/T3-2`) | T6-01, T6-02, T6-03 | doing |
+| T6-1 | `wave/T6-1` (nối từ `wave/T3-2`) | T6-01, T6-02, T6-03 | review |
 
 ## Sau T1
 
@@ -57,4 +57,4 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 |---|---|---|---|---|
 | [T6-01](T6-01.md) | Hàng đợi review ảnh/prediction | Codex | T3-2 (nhánh cha) | review |
 | [T6-02](T6-02.md) | Lưu bản sửa riêng | Codex | T6-01 | review |
-| [T6-03](T6-03.md) | Giao diện review | Codex | T6-01, T6-02 | todo |
+| [T6-03](T6-03.md) | Giao diện review | Codex | T6-01, T6-02 | review |

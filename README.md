@@ -218,6 +218,27 @@ and `VIRECEIPT_LLM_MAX_TOKENS` (default 4096) as needed. The same JSON parsing, 
 review-only decisions and null confidence/cost rules apply. End-to-end transport tests use
 a local HTTP stub; neither adapter has been benchmarked on real receipts.
 
+## Reviewing and correcting predictions
+
+The local review app shows the source image, raw prediction and verification metadata beside
+a JSON editor. Schema-invalid or null predictions start with a blank receipt template. Run:
+
+```bash
+uv run --group label streamlit run src/vireceipt/review_app.py -- --data data \
+    --manifest manifest.jsonl --pred predictions/baseline.jsonl
+```
+
+Manifest/prediction paths are relative to `--data` (absolute paths inside it also work); inputs
+under `labels/` are refused. Every manifest ID must have exactly one prediction. Choose the image's
+source, quality tags and `store_id` explicitly. Existing corrections reload when revisiting an ID.
+
+Saving checks strict JSON, the output schema, arithmetic and dates. Printed inconsistencies are
+preserved and reported for inspection. Original OCR warnings remain in the model-output view;
+corrections are checked without the original transcript. The app never changes predictions or
+accepts a receipt automatically. Corrections are atomically upserted by ID in
+`data/review/corrections.jsonl` as candidate labels, separate from all/train/val/test. Dataset
+promotion and store-based splitting remain manual. This app supports one local writer at a time.
+
 ## Repository layout
 
 ```
