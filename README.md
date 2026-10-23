@@ -7,8 +7,8 @@ ViReceipt reads a phone photo of a Vietnamese retail receipt and returns structu
 arithmetic and the evidence behind every value; when a check fails or confidence is low, the
 receipt goes to a human reviewer instead of being accepted silently.
 
-> **Status: week 0 — scaffolding.** The output schema, the labeling guide and the evaluation
-> harness exist; no extractor has been built and **there are no results yet**. Every number
+> **Status: extraction pipeline implemented; no benchmark results yet.** The schema, labeling
+> tools, evaluation harness and a configurable VLM API adapter exist. Every benchmark number
 > that appears in this README later will come from a report in `results/`, with the commit,
 > model version and sample count.
 
@@ -104,8 +104,9 @@ Only `id` and `receipt` are required; `receipt` may be `null` when extraction fa
 
 ## Running an extraction adapter
 
-The runner and CLI are available; **no OCR/LLM/VLM backend is implemented yet**.
-Provide an importable Python callable with this contract:
+The runner and CLI include a configurable VLM Chat Completions adapter. It has been tested
+against a local HTTP stub; **live provider compatibility and extraction accuracy are unmeasured**.
+Additional backends can provide an importable Python callable with this contract:
 
 ```python
 from pathlib import Path
@@ -141,6 +142,29 @@ latency measures the adapter call. Schema-invalid JSON is retained with `schema_
 An adapter failure produces a null receipt and an error code; later images still run, the
 output is written atomically, and the CLI exits with code 1. A schema-invalid output alone
 does not change the exit code. Score the resulting JSONL with `vireceipt-eval` as above.
+
+For the built-in VLM adapter, configure a vision model on a compatible endpoint (PowerShell):
+
+```powershell
+$env:VIRECEIPT_VLM_BASE_URL = "http://127.0.0.1:8000/v1"
+$env:VIRECEIPT_VLM_MODEL = "your-served-vision-model"
+# Set VIRECEIPT_VLM_API_KEY through your environment if the endpoint requires authentication.
+uv run vireceipt-extract data/manifest.jsonl --extractor vireceipt.extractors.chat_vlm:extract `
+    --out data/predictions/vlm.jsonl
+```
+
+The endpoint and model are required; the CLI does not start a model server or choose a provider.
+HTTPS is required for remote endpoints; HTTP is allowed for loopback servers. Images must be
+JPG/PNG with matching file signatures, at most 10 MiB each. The adapter sends them as base64
+data URIs with the versioned `receipt-v1` zero-shot prompt and the current output schema.
+It does not repair inconsistent totals or invent unreadable values.
+
+`VIRECEIPT_VLM_TIMEOUT` defaults to 60 seconds and `VIRECEIPT_VLM_MAX_TOKENS` to 4096.
+Responses must finish with `stop`; refusals, truncation, HTTP/network errors and responses over
+4 MiB fail that image. Requests are never retried or redirected. Confidence and cost remain null.
+Provider billing, quotas, model/JSON-mode support and accuracy need verification on `val` before
+reporting any baseline. The adapter follows the [Chat Completions protocol](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
+also used in [Qwen's serving examples](https://github.com/QwenLM/Qwen3-VL).
 
 ## Repository layout
 
