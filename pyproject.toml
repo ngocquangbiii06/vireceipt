@@ -13,6 +13,7 @@ dependencies = [
 vireceipt-eval = "vireceipt.eval.cli:main"
 vireceipt-freeze = "vireceipt.eval.lock:main"
 vireceipt-check-labels = "vireceipt.checks:main"
+vireceipt-split = "vireceipt.split:main"
 
 [dependency-groups]
 dev = [
