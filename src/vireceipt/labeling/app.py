@@ -56,7 +56,7 @@ def main(argv: list[str] | None = None) -> None:
         record_id = st.sidebar.selectbox("ID cần sửa", [row["id"] for row in records])
         current = next(row for row in records if row["id"] == record_id)
         relative = current["image"]
-    prefix = f"{mode}:{record_id}:"
+    prefix = f"{mode}:{record_id}:{relative}:"
     image_path = (data / relative).resolve()
     if not image_path.is_relative_to(images.resolve()):
         st.error("Ảnh phải nằm trong thư mục images.")

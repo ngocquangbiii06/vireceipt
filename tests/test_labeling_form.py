@@ -167,6 +167,18 @@ def test_app_saves_two_images_and_edits_without_opening_splits(tmp_path, monkeyp
         next(widget for widget in app.button if widget.label == label).click().run()
         assert not app.exception
 
+    text("Tên cửa hàng").input("Không được mang sang ảnh khác")
+    text("store_id").input("demo-q1")
+    text("Ngày").input("31/02/2026")
+    click("Lưu")
+    assert app.error
+    next(widget for widget in app.selectbox if widget.label == "Ảnh chưa gán").select(
+        "images/b.jpg"
+    ).run()
+    assert text("Tên cửa hàng").value == ""
+    next(widget for widget in app.selectbox if widget.label == "Ảnh chưa gán").select(
+        "images/a.png"
+    ).run()
     click("Xoay 90°")
     assert app.session_state["rotation:images/a.png"] == 90
     text("store_id").input("demo-q1")
