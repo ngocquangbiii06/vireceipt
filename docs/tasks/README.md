@@ -13,7 +13,13 @@ sang `done` khi merge.
 | [T1-04](T1-04.md) | App gán nhãn (Streamlit) | Codex | T1-02 | todo |
 | [T1-05](T1-05.md) | Chụp, che, gán nhãn ≥100 hóa đơn; chia tập; đóng băng `test` | Chủ repo | T1-02, T1-03, T1-04 | todo |
 
-T1-02 và T1-03 không đụng file của nhau, làm song song được (hai nhánh riêng).
+## Đợt
+
+Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/review-batch`, merge một lần (AGENTS.md §6).
+
+| Đợt | Nhánh | Task (theo thứ tự) | Trạng thái |
+|---|---|---|---|
+| T1-1 | `wave/T1-1` | T1-02 (sửa sau review), T1-03, T1-04 | todo |
 
 ## Sau T1
 
