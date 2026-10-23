@@ -145,6 +145,14 @@ An adapter failure produces a null receipt and an error code; later images still
 output is written atomically, and the CLI exits with code 1. A schema-invalid output alone
 does not change the exit code. Score the resulting JSONL with `vireceipt-eval` as above.
 
+The runner also writes `verification_issues`, a list of `{code, severity, message}` objects.
+It checks schema, arithmetic (including half-up rounding), calendar dates, future/old dates,
+and missing seller/date/total/items. Missing numbers skip arithmetic checks; absent discount/VAT
+count as zero in the subtotal-to-total check. Numbers are preserved when checks disagree.
+Verification issues alone do not change the CLI exit code or trigger automatic acceptance.
+An empty issue list is not proof of correctness: OCR grounding and a measured acceptance policy
+are still needed. All current outputs require human review.
+
 For the built-in VLM adapter, configure a vision model on a compatible endpoint (PowerShell):
 
 ```powershell

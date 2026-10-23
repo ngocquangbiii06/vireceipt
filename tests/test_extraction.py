@@ -1,9 +1,32 @@
 import math
+from datetime import date
 from pathlib import Path
 
 import pytest
 
 from vireceipt.eval.io import Prediction, load_predictions
+
+TODAY = date(2026, 10, 23)
+
+
+def test_runner_writes_verification_issues_without_changing_receipt(receipt, tmp_path):
+    from vireceipt.extraction import ExtractionResult, extract_images, write_predictions
+
+    receipt["total"] = 89001
+    receipt["issued_at"]["date"] = "2026-02-31"
+    (prediction,) = extract_images(
+        {"r0001": Path("a.png")}, lambda image: ExtractionResult(receipt), today=TODAY
+    )
+    assert prediction.receipt == receipt and prediction.receipt["total"] == 89001
+    assert prediction.extra["schema_valid"] is True and prediction.decision == "review"
+    assert {(i["code"], i["severity"]) for i in prediction.extra["verification_issues"]} == {
+        ("total", "warning"),
+        ("date_invalid", "error"),
+    }
+    assert all(isinstance(i["message"], str) for i in prediction.extra["verification_issues"])
+    output = tmp_path / "pred.jsonl"
+    write_predictions([prediction], output)
+    assert load_predictions(output) == [prediction]
 
 
 def test_runner_preserves_outputs_and_continues_after_backend_failure(receipt, monkeypatch):
@@ -20,12 +43,13 @@ def test_runner_preserves_outputs_and_continues_after_backend_failure(receipt, m
     predictions = extraction.extract_images(
         {"r0001": Path("valid.png"), "r0002": Path("invalid.png"), "r0003": Path("broken.png")},
         backend,
+        today=TODAY,
     )
     assert [p.id for p in predictions] == ["r0001", "r0002", "r0003"]
-    assert predictions[0].receipt == receipt and predictions[0].extra == {"schema_valid": True}
-    assert predictions[1].receipt == {"total": 1} and predictions[1].extra == {
-        "schema_valid": False
-    }
+    assert predictions[0].receipt == receipt and predictions[0].extra["schema_valid"] is True
+    assert predictions[0].extra["verification_issues"] == []
+    assert predictions[1].receipt == {"total": 1} and predictions[1].extra["schema_valid"] is False
+    assert [i["code"] for i in predictions[1].extra["verification_issues"]] == ["schema_invalid"]
     assert predictions[2].receipt is None and predictions[2].extra["error"] == "extractor_failed"
     assert "private" not in repr(predictions)
     assert [p.latency_ms for p in predictions] == pytest.approx([12, 30, 40])

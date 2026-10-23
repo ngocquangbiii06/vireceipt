@@ -5,13 +5,14 @@ import math
 import os
 import tempfile
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from datetime import date
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Protocol
 
 from vireceipt.eval.io import Prediction
-from vireceipt.schema import is_valid_receipt
+from vireceipt.verify import verify_receipt
 
 
 @dataclass(frozen=True)
@@ -31,7 +32,9 @@ class Extractor(Protocol):
         ...
 
 
-def extract_images(images: Mapping[str, Path], extractor: Extractor) -> list[Prediction]:
+def extract_images(
+    images: Mapping[str, Path], extractor: Extractor, *, today: date | None = None
+) -> list[Prediction]:
     """Run in input order, retaining failed and schema-invalid predictions for evaluation."""
     predictions = []
     for record_id, image in images.items():
@@ -62,7 +65,11 @@ def extract_images(images: Mapping[str, Path], extractor: Extractor) -> list[Pre
                 confidence, cost = result.confidence, result.cost_usd
             except (TypeError, ValueError, OverflowError, RecursionError):
                 error = "invalid_result"
-        extra = {"schema_valid": is_valid_receipt(receipt)}
+        verification = verify_receipt(receipt, today=today)
+        extra = {
+            "schema_valid": verification.schema_valid,
+            "verification_issues": [asdict(issue) for issue in verification.issues],
+        }
         if error:
             extra["error"] = error
         predictions.append(

@@ -23,7 +23,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | T2-1 | `wave/T2-1` (nối từ `wave/T1-1`) | T2-01, T2-02 | review |
 | T2-2 | `wave/T2-2` (nối từ `wave/T2-1`) | T2-03, T2-04, T2-05 | review |
 | T2-3 | `wave/T2-3` (nối từ `wave/T2-2`) | T2-06, T2-07 | review |
-| T3-1 | `wave/T3-1` (nối từ `wave/T2-3`) | T3-01, T3-02 | doing |
+| T3-1 | `wave/T3-1` (nối từ `wave/T2-3`) | T3-01, T3-02 | review |
 
 ## Sau T1
 
@@ -45,4 +45,4 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 | Mã | Việc | Người làm | Phụ thuộc | Trạng thái |
 |---|---|---|---|---|
 | [T3-01](T3-01.md) | Verifier schema/số học/ngày/thiếu dữ kiện | Codex | T1-02, T2-3 (nhánh cha) | review |
-| [T3-02](T3-02.md) | Tích hợp verifier vào prediction | Codex | T3-01 | todo |
+| [T3-02](T3-02.md) | Tích hợp verifier vào prediction | Codex | T3-01 | review |
