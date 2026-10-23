@@ -85,6 +85,7 @@ uv sync
 uv run pytest
 uv run ruff check . && uv run ruff format --check .
 uv run vireceipt-check-labels tests/fixtures/gold.jsonl
+uv run --group label streamlit run src/vireceipt/labeling/app.py -- --data data
 
 # score predictions against labels (fixtures shown; real data lives in data/, not in git)
 uv run vireceipt-eval --gold tests/fixtures/gold.jsonl --pred tests/fixtures/pred.jsonl \

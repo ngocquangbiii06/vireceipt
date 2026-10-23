@@ -1,4 +1,5 @@
 import json
+from datetime import date
 
 import pytest
 
@@ -121,3 +122,73 @@ def test_unlabeled_images_and_next_id(values, tmp_path):
     assert [p.name for p in unlabeled_images(images, labels)] == ["b.JPG", "c.jpeg"]
     assert next_id([]) == "r0001"
     assert next_id(["r0003", "r0001"]) == "r0004"
+
+
+def test_app_saves_two_images_and_edits_without_opening_splits(tmp_path, monkeypatch):
+    testing = pytest.importorskip("streamlit.testing.v1")
+    image = pytest.importorskip("PIL.Image")
+    from pathlib import Path
+
+    class FixedDate(date):
+        @classmethod
+        def today(cls):
+            return date(2026, 10, 23)
+
+    monkeypatch.setattr("vireceipt.checks.date", FixedDate)
+
+    images, labels = tmp_path / "images", tmp_path / "labels"
+    images.mkdir()
+    labels.mkdir()
+    image.new("RGB", (40, 20), "red").save(images / "a.png")
+    image.new("RGB", (20, 40), "blue").save(images / "b.jpg")
+    forbidden = {labels / f"{name}.jsonl" for name in ("train", "val", "test")}
+    for path in forbidden:
+        path.write_bytes(b"must never open")
+    original_open = Path.open
+
+    def guard(path, *args, **kwargs):
+        assert path not in forbidden, f"App opened a split file: {path}"
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", guard)
+
+    def launch(data_dir):
+        from vireceipt.labeling.app import main
+
+        main(["--data", data_dir])
+
+    app = testing.AppTest.from_function(launch, args=(str(tmp_path),), default_timeout=45).run()
+    assert not app.exception
+
+    def text(label):
+        return next(widget for widget in app.text_input if widget.label == label)
+
+    def click(label):
+        next(widget for widget in app.button if widget.label == label).click().run()
+        assert not app.exception
+
+    click("Xoay 90°")
+    assert app.session_state["rotation:images/a.png"] == 90
+    text("store_id").input("demo-q1")
+    text("Ngày").input("31/02/2026")
+    click("Lưu")
+    assert app.error and not (labels / "all.jsonl").exists()
+    text("Ngày").input("12/10/2026")
+    text("Tổng thanh toán").input("20.000")
+    click("Lưu")
+    assert app.success and app.warning
+    assert any("demo-q1" in caption.value for caption in app.caption)
+    text("store_id").input("demo-q1")
+    text("Tên cửa hàng").input("Quán thử nghiệm")
+    click("Lưu")
+    assert app.success
+    app.radio[0].set_value("Sửa nhãn").run()
+    assert not app.exception
+    app.text_area[0].input("đã sửa bằng AppTest")
+    click("Lưu")
+    saved = [
+        json.loads(line) for line in (labels / "all.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert [row["id"] for row in saved] == ["r0001", "r0002"]
+    assert saved[0]["notes"] == "đã sửa bằng AppTest"
+    assert saved[0]["image"] == "images/a.png" and saved[1]["image"] == "images/b.jpg"

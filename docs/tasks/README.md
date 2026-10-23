@@ -10,7 +10,7 @@ sang `done` khi merge.
 | [T1-01](T1-01.md) | Kiểm tra giấy phép và cấu trúc nguồn dữ liệu, mô hình | Chủ repo (+AI tra cứu) | — | todo |
 | [T1-02](T1-02.md) | Hàm kiểm tra nhất quán nhãn + lệnh `vireceipt-check-labels` | Codex | — | review |
 | [T1-03](T1-03.md) | Chia tập theo cửa hàng: lệnh `vireceipt-split` | Codex | — | review |
-| [T1-04](T1-04.md) | App gán nhãn (Streamlit) | Codex | T1-02 | doing |
+| [T1-04](T1-04.md) | App gán nhãn (Streamlit) | Codex | T1-02 | review |
 | [T1-05](T1-05.md) | Chụp, che, gán nhãn ≥100 hóa đơn; chia tập; đóng băng `test` | Chủ repo | T1-02, T1-03, T1-04 | todo |
 
 ## Đợt
@@ -19,7 +19,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 
 | Đợt | Nhánh | Task (theo thứ tự) | Trạng thái |
 |---|---|---|---|
-| T1-1 | `wave/T1-1` | T1-02 (sửa sau review), T1-03, T1-04 | doing |
+| T1-1 | `wave/T1-1` | T1-02 (sửa sau review), T1-03, T1-04 | review |
 
 ## Sau T1
 
