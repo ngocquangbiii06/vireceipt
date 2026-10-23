@@ -19,7 +19,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 
 | Đợt | Nhánh | Task (theo thứ tự) | Trạng thái |
 |---|---|---|---|
-| T1-1 | `wave/T1-1` | T1-02 (sửa sau review), T1-03, T1-04 | todo |
+| T1-1 | `wave/T1-1` | T1-02 (sửa sau review), T1-03, T1-04 | doing |
 
 ## Sau T1
 

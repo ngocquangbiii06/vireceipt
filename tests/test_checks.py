@@ -55,6 +55,13 @@ def test_fractional_quantity_is_rounded_to_dong(receipt, quantity, amount, expec
     assert {i.code for i in check_receipt(receipt, today=TODAY)} == expected
 
 
+@pytest.mark.parametrize("amount,expected", [(12501, set()), (12500, {"line_amount"})])
+def test_half_dong_rounds_up(receipt, amount, expected):
+    receipt["items"] = [dict(receipt["items"][0], quantity=0.5, unit_price=25001, amount=amount)]
+    receipt["subtotal"] = receipt["total"] = amount
+    assert {i.code for i in check_receipt(receipt, today=TODAY)} == expected
+
+
 @pytest.mark.parametrize(
     "discount,vat,total,expected",
     [

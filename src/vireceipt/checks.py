@@ -5,6 +5,7 @@ import re
 import sys
 from dataclasses import dataclass
 from datetime import date
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any, Literal
 
@@ -31,11 +32,16 @@ def check_receipt(receipt: dict[str, Any], *, today: date | None = None) -> list
     for index, item in enumerate(receipt["items"], start=1):
         quantity, price, amount = (item[key] for key in ("quantity", "unit_price", "amount"))
         if all(value is not None for value in (quantity, price, amount)):
-            expected = round(quantity * price)
+            expected = int(
+                (Decimal(str(quantity)) * Decimal(str(price))).quantize(
+                    Decimal("1"), rounding=ROUND_HALF_UP
+                )
+            )
             if expected != amount:
                 warn(
                     "line_amount",
-                    f"Món {index}: round({quantity} × {price}) = {expected}, amount = {amount}.",
+                    f"Món {index}: {quantity} × {price} làm tròn lên ở .5 = {expected}, "
+                    f"amount = {amount}.",
                 )
     subtotal, discount, vat, total = (
         receipt[key] for key in ("subtotal", "discount", "vat", "total")
