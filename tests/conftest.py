@@ -10,6 +10,47 @@ import pytest
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
+@pytest.fixture(autouse=True)
+def isolate_api_database(monkeypatch):
+    """Never let API tests implicitly connect to a user's configured database."""
+    monkeypatch.delenv("VIRECEIPT_DATABASE_URL", raising=False)
+
+
+@pytest.fixture
+def api_repository():
+    import os
+
+    pytest.importorskip("pg8000.dbapi")
+    from vireceipt.database import DatabaseConfig, connection, init_database
+    from vireceipt.request_store import RequestStore
+
+    url = os.environ.get("VIRECEIPT_TEST_DATABASE_URL")
+    if not url:
+        pytest.skip("Set VIRECEIPT_TEST_DATABASE_URL for PostgreSQL integration tests")
+    config = DatabaseConfig.from_url(url)
+    assert config.database == "vireceipt_test"
+    init_database(config)
+    ids = []
+    try:
+        yield RequestStore(config), ids, url
+    finally:
+        with connection(config) as conn:
+            for job_id in ids:
+                conn.cursor().execute(
+                    "DELETE FROM vireceipt_requests WHERE job_id = %s::uuid", (job_id,)
+                )
+
+
+@pytest.fixture
+def api_png():
+    import io
+
+    Image = pytest.importorskip("PIL.Image")
+    stream = io.BytesIO()
+    Image.new("RGB", (2, 3), "blue").save(stream, format="PNG")
+    return stream.getvalue()
+
+
 @pytest.fixture
 def gold_path() -> Path:
     return FIXTURES / "gold.jsonl"

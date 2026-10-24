@@ -29,6 +29,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | T6-2 | `wave/T6-2` (nối từ `wave/T6-1`) | T6-04 | review |
 | T6-3 | `wave/T6-3` (nối từ `wave/T6-2`) | T6-05, T6-06, T6-07 | review |
 | T6-4 | `wave/T6-4` (nối từ `wave/T6-3`) | T6-08, T6-09 | review |
+| T6-5 | `wave/T6-5` (nối từ `wave/T6-4`) | T6-10, T6-11 | doing |
 
 ## Sau T1
 
@@ -67,3 +68,5 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 | [T6-07](T6-07.md) | Smoke API HTTP và hướng dẫn vận hành | Codex | T6-06 | review |
 | [T6-08](T6-08.md) | PostgreSQL connection/schema | Codex | T6-3 (nhánh cha) | review |
 | [T6-09](T6-09.md) | Repository request PostgreSQL | Codex | T6-08 | review |
+| [T6-10](T6-10.md) | API lưu request PostgreSQL | Codex | T6-4 (nhánh cha) | review |
+| [T6-11](T6-11.md) | API đọc hàng đợi/chi tiết/ảnh | Codex | T6-10 | todo |

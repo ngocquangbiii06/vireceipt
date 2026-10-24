@@ -1,4 +1,4 @@
-"""Local stateless HTTP interface to the existing extractor and verifier."""
+"""Local HTTP extraction with optional durable PostgreSQL snapshots."""
 
 import asyncio
 import os
@@ -12,11 +12,18 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 from vireceipt.api_images import MAX_BYTES, UploadError, validate_image
+from vireceipt.database import DatabaseConfig, init_database
 from vireceipt.extraction import Extractor, extract_images
+from vireceipt.request_store import RequestStore
 
 
-def create_app(extractor: Extractor | None = None, *, today: date | None = None) -> FastAPI:
-    """Create a local app; select a built-in backend explicitly when not injected."""
+def create_app(
+    extractor: Extractor | None = None,
+    *,
+    today: date | None = None,
+    store: RequestStore | None = None,
+) -> FastAPI:
+    """Select the backend explicitly; persist only with a store or configured database URL."""
     if extractor is None:
         choice = os.environ.get("VIRECEIPT_API_BACKEND", "")
         if choice == "vlm":
@@ -26,6 +33,14 @@ def create_app(extractor: Extractor | None = None, *, today: date | None = None)
         else:
             raise ValueError("Set VIRECEIPT_API_BACKEND to vlm or ocr-llm")
         extractor = extract
+    database_url = os.environ.get("VIRECEIPT_DATABASE_URL")
+    if store is None and database_url is not None:
+        try:
+            config = DatabaseConfig.from_url(database_url)
+            init_database(config)
+            store = RequestStore(config)
+        except Exception:
+            raise RuntimeError("PostgreSQL storage initialization failed") from None
     app = FastAPI(title="ViReceipt local API", version="0.1.0")
     backend_lock = asyncio.Lock()
 
@@ -37,6 +52,12 @@ def create_app(extractor: Extractor | None = None, *, today: date | None = None)
             (prediction,) = extract_images({record_id: image}, extractor, today=today)
         row = vars(prediction).copy()
         row.update(row.pop("extra"))
+        if store is not None:
+            try:
+                mime = "image/png" if suffix == ".png" else "image/jpeg"
+                row["job_id"] = store.save(prediction, mime, payload)
+            except Exception:
+                raise HTTPException(503, "storage_unavailable") from None
         return JSONResponse(row, status_code=502 if "error" in row else 200)
 
     @app.get("/healthz")

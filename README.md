@@ -264,8 +264,27 @@ issues and grounding metadata. Every decision remains `review`. Invalid schema a
 with the raw receipt; backend/metadata failures return 502 with a null receipt and a sanitized
 error code. Bad IDs/images use 4xx responses; upload limits use 413. No transcript is included.
 
-This is a local stateless interface. PostgreSQL storage, authentication and public deployment are
-still planned. Tests use synthetic images, local Chat API stubs and a real loopback Uvicorn server;
+Without database configuration this is a stateless interface. To keep uploaded images and
+prediction snapshots, install the storage group and set a server-owned PostgreSQL URL:
+
+```powershell
+uv sync --group api --group storage
+# Set VIRECEIPT_DATABASE_URL through your environment, for example:
+# postgresql://USER:PASSWORD@HOST:5432/DATABASE (percent-encode credentials as needed).
+# Then start the same Uvicorn factory above, with the database already provisioned.
+```
+
+Startup initializes the request table/index idempotently; connection/configuration errors stop
+startup. Local database connections can be plain; remote hosts require certificate-verified TLS.
+Each extraction gets a new UUID `job_id` after the original image and prediction are committed,
+including invalid model output and backend failures. Reusing a receipt ID creates another job.
+The original snapshot keeps its prediction fields; `job_id` is added only to the HTTP response.
+Storage failures return 503 `storage_unavailable`; there is no automatic retry or idempotency key,
+so a client retry may invoke and bill the model again. No storage failure is returned as a durable
+success. Temporary-image failures use 503 `temporary_storage_unavailable`.
+
+Run this API on loopback: authentication and public deployment are still planned. Tests use
+synthetic images, PostgreSQL, local Chat API stubs and a real loopback Uvicorn server;
 live provider compatibility and extraction accuracy remain unmeasured. The raw-body route uses
 [FastAPI's Request interface](https://fastapi.tiangolo.com/advanced/using-request-directly/).
 
