@@ -312,7 +312,21 @@ gives 409 `revision_conflict`: read the job again and reconcile the edits; do no
 Successful saves change status to `corrected`, while the original image and prediction stay fixed.
 `corrected` means a candidate correction was saved, not automatic acceptance or dataset promotion.
 Only the latest correction and its revision are stored. The file-based review app above still
-uses manifest/JSONL inputs; an API-backed editor is separate work.
+uses manifest/JSONL inputs. For persisted jobs, run the HTTP editor alongside the configured API:
+
+```bash
+uv run --group label streamlit run src/vireceipt/api_review_app.py -- --api http://127.0.0.1:8000
+```
+
+The HTTP editor pages/filter jobs and selects by UUID, so repeated receipt IDs remain separate.
+It shows the original image/prediction, starts a blank schema template for invalid/null output,
+and reloads saved corrections. Choose store/source/quality explicitly before saving.
+The editor holds the revision seen when the form opened. A 409 keeps the draft: copy it for
+comparison, then use **Đọc lại bản mới** to load the current server copy before reconciling.
+Reloading discards the current draft. Changes are candidate corrections, never automatic labels
+in a dataset split. The client accepts loopback HTTP/HTTPS URLs, uses a ten-second timeout and
+does not retry, redirect or use environment proxies. JSON responses are capped at 16 MiB and
+images at 10 MiB. Keep both the API and Streamlit local while authentication is absent.
 
 Request-shape validation uses 422 `invalid_request` without echoing input values; correction
 schema/metadata checks use 422 `invalid_correction`. Error responses never include database details.

@@ -31,7 +31,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | T6-4 | `wave/T6-4` (nối từ `wave/T6-3`) | T6-08, T6-09 | review |
 | T6-5 | `wave/T6-5` (nối từ `wave/T6-4`) | T6-10, T6-11 | review |
 | T6-6 | `wave/T6-6` (nối từ `wave/T6-5`) | T6-12, T6-13 | review |
-| T6-7 | `wave/T6-7` (nối từ `wave/T6-6`) | T6-14, T6-15 | doing |
+| T6-7 | `wave/T6-7` (nối từ `wave/T6-6`) | T6-14, T6-15 | review |
 
 ## Sau T1
 
@@ -75,4 +75,4 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 | [T6-12](T6-12.md) | Correction PostgreSQL với revision | Codex | T6-5 (nhánh cha) | review |
 | [T6-13](T6-13.md) | HTTP ghi correction | Codex | T6-12 | review |
 | [T6-14](T6-14.md) | HTTP review client | Codex | T6-6 (nhánh cha) | review |
-| [T6-15](T6-15.md) | Giao diện review qua API | Codex | T6-14 | todo |
+| [T6-15](T6-15.md) | Giao diện review qua API | Codex | T6-14 | review |
