@@ -283,6 +283,21 @@ Storage failures return 503 `storage_unavailable`; there is no automatic retry o
 so a client retry may invoke and bill the model again. No storage failure is returned as a durable
 success. Temporary-image failures use 503 `temporary_storage_unavailable`.
 
+Read persisted jobs without invoking the model:
+
+- `GET /v1/requests?limit=50&offset=0&status=review` returns `{items, limit, offset}`;
+  items contain only UUID, receipt ID, status, revision and timestamps. Limit is 1–100;
+  offset is nonnegative, status can be omitted or `review`/`corrected`. Newest jobs come first,
+  with UUID as the tie-breaker. Offset pages can shift when concurrent requests are inserted.
+- `GET /v1/requests/{job_id}` returns that metadata, image MIME, the original prediction and
+  the current correction (initially null), without image bytes. Timestamps use ISO format.
+- `GET /v1/requests/{job_id}/image` returns the original bytes with their stored image MIME.
+
+Read responses use `Cache-Control: no-store`. A malformed UUID/query gives 422, an unknown UUID
+404, missing storage configuration 503 `storage_not_configured`, and a storage failure 503
+`storage_unavailable`. The local file-based review app above still uses its manifest/JSONL inputs;
+HTTP correction writing and an API-backed editor are separate work.
+
 Run this API on loopback: authentication and public deployment are still planned. Tests use
 synthetic images, PostgreSQL, local Chat API stubs and a real loopback Uvicorn server;
 live provider compatibility and extraction accuracy remain unmeasured. The raw-body route uses

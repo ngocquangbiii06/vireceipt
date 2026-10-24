@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 from vireceipt.api_images import MAX_BYTES, UploadError, validate_image
+from vireceipt.api_requests import requests_router
 from vireceipt.database import DatabaseConfig, init_database
 from vireceipt.extraction import Extractor, extract_images
 from vireceipt.request_store import RequestStore
@@ -42,6 +43,7 @@ def create_app(
         except Exception:
             raise RuntimeError("PostgreSQL storage initialization failed") from None
     app = FastAPI(title="ViReceipt local API", version="0.1.0")
+    app.include_router(requests_router(store))
     backend_lock = asyncio.Lock()
 
     def process(payload: bytes, content_type: str, record_id: str) -> JSONResponse:
