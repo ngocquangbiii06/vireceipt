@@ -4,14 +4,24 @@ import json
 import re
 from contextlib import closing
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
 from vireceipt.database import DatabaseConfig, connection
 from vireceipt.eval.io import Prediction
+from vireceipt.request_corrections import prepare_correction
+from vireceipt.verify import Verification
 
 _SUMMARY = "job_id::text, receipt_id, status, revision, created_at, updated_at"
+
+
+class RequestNotFound(LookupError):
+    """No persisted request has this UUID."""
+
+
+class RevisionConflict(ValueError):
+    """Another correction was saved since this reviewer read the job."""
 
 
 @dataclass(frozen=True)
@@ -96,6 +106,46 @@ class RequestStore:
             json.loads(row[8]),
             None if row[9] is None else json.loads(row[9]),
         )
+
+    def correct(
+        self,
+        job_id: str,
+        expected_revision: int,
+        receipt: Any,
+        *,
+        store_id: str,
+        source: str,
+        quality: list[str],
+        notes: str = "",
+        today: date | None = None,
+    ) -> tuple[int, Verification]:
+        """Save a candidate correction only if the reviewer's revision is still current."""
+        canonical = str(UUID(job_id))
+        if (
+            isinstance(expected_revision, bool)
+            or not isinstance(expected_revision, int)
+            or not 0 <= expected_revision <= 2147483646
+        ):
+            raise ValueError("Invalid expected revision")
+        payload, report = prepare_correction(
+            receipt, store_id=store_id, source=source, quality=quality, notes=notes, today=today
+        )
+        with connection(self.config) as conn, closing(conn.cursor()) as cursor:
+            cursor.execute(
+                "UPDATE vireceipt_requests SET correction = %s::json, status = 'corrected', "
+                "revision = revision + 1, updated_at = CURRENT_TIMESTAMP "
+                "WHERE job_id = %s::uuid AND revision = %s RETURNING revision",
+                (payload, canonical, expected_revision),
+            )
+            row = cursor.fetchone()
+            if row is None:
+                cursor.execute(
+                    "SELECT 1 FROM vireceipt_requests WHERE job_id = %s::uuid", (canonical,)
+                )
+                if cursor.fetchone() is None:
+                    raise RequestNotFound("Request not found")
+                raise RevisionConflict("Revision conflict")
+        return row[0], report
 
     def list_requests(
         self,
