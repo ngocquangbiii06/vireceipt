@@ -295,8 +295,27 @@ Read persisted jobs without invoking the model:
 
 Read responses use `Cache-Control: no-store`. A malformed UUID/query gives 422, an unknown UUID
 404, missing storage configuration 503 `storage_not_configured`, and a storage failure 503
-`storage_unavailable`. The local file-based review app above still uses its manifest/JSONL inputs;
-HTTP correction writing and an API-backed editor are separate work.
+`storage_unavailable`.
+
+Save a human correction with `PUT /v1/requests/{job_id}/correction` and a JSON body:
+
+```json
+{"expected_revision": 0, "receipt": {"...": "complete receipt matching the output schema"},
+ "store_id": "shop-1", "source": "own", "quality": ["good"], "notes": "checked against image"}
+```
+
+Use the revision returned by GET detail; `receipt` must be the complete schema object, source is
+`own` or `mcocr`, and quality uses the labeling guide's tags. The response contains `job_id`,
+the new `revision` and `verification`. Printed arithmetic/date inconsistencies are preserved
+and reported; absent numbers skip arithmetic. Schema/metadata errors give 422. A stale revision
+gives 409 `revision_conflict`: read the job again and reconcile the edits; do not retry blindly.
+Successful saves change status to `corrected`, while the original image and prediction stay fixed.
+`corrected` means a candidate correction was saved, not automatic acceptance or dataset promotion.
+Only the latest correction and its revision are stored. The file-based review app above still
+uses manifest/JSONL inputs; an API-backed editor is separate work.
+
+Request-shape validation uses 422 `invalid_request` without echoing input values; correction
+schema/metadata checks use 422 `invalid_correction`. Error responses never include database details.
 
 Run this API on loopback: authentication and public deployment are still planned. Tests use
 synthetic images, PostgreSQL, local Chat API stubs and a real loopback Uvicorn server;

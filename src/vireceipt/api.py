@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
@@ -43,8 +44,14 @@ def create_app(
         except Exception:
             raise RuntimeError("PostgreSQL storage initialization failed") from None
     app = FastAPI(title="ViReceipt local API", version="0.1.0")
-    app.include_router(requests_router(store))
+    app.include_router(requests_router(store, today=today))
     backend_lock = asyncio.Lock()
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(request: Request, error: RequestValidationError) -> JSONResponse:
+        return JSONResponse(
+            {"detail": "invalid_request"}, status_code=422, headers={"Cache-Control": "no-store"}
+        )
 
     def process(payload: bytes, content_type: str, record_id: str) -> JSONResponse:
         suffix = validate_image(payload, content_type)
