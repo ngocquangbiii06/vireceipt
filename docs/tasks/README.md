@@ -32,6 +32,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | T6-5 | `wave/T6-5` (nối từ `wave/T6-4`) | T6-10, T6-11 | review |
 | T6-6 | `wave/T6-6` (nối từ `wave/T6-5`) | T6-12, T6-13 | review |
 | T6-7 | `wave/T6-7` (nối từ `wave/T6-6`) | T6-14, T6-15 | review |
+| R1 | `wave/R1` (nối từ `wave/T6-7`) | R-01, R-02 (sửa theo `.reviews/stack-T6-7.md`) | todo |
 
 ## Sau T1
 
@@ -76,3 +77,10 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 | [T6-13](T6-13.md) | HTTP ghi correction | Codex | T6-12 | review |
 | [T6-14](T6-14.md) | HTTP review client | Codex | T6-6 (nhánh cha) | review |
 | [T6-15](T6-15.md) | Giao diện review qua API | Codex | T6-14 | review |
+
+## Sửa sau review chồng đợt T1-1 → T6-7
+
+| Mã | Việc | Người làm | Phụ thuộc | Trạng thái |
+|---|---|---|---|---|
+| [R-01](R-01.md) | CI chạy đủ test API, giao diện và PostgreSQL | Codex | — | todo |
+| [R-02](R-02.md) | Grounding ngày năm 2 chữ số và năm đứng trước | Codex | — | todo |
