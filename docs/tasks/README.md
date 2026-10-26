@@ -32,7 +32,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | T6-5 | `wave/T6-5` (nối từ `wave/T6-4`) | T6-10, T6-11 | review |
 | T6-6 | `wave/T6-6` (nối từ `wave/T6-5`) | T6-12, T6-13 | review |
 | T6-7 | `wave/T6-7` (nối từ `wave/T6-6`) | T6-14, T6-15 | review |
-| R1 | `wave/R1` (nối từ `wave/T6-7`) | R-01, R-02 (sửa theo `.reviews/stack-T6-7.md`) | todo |
+| R1 | `wave/R1` (nối từ `wave/T6-7`) | R-01, R-02, R-03, T4-01 | todo |
 
 ## Sau T1
 
@@ -84,3 +84,5 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 |---|---|---|---|---|
 | [R-01](R-01.md) | CI chạy đủ test API, giao diện và PostgreSQL | Codex | — | todo |
 | [R-02](R-02.md) | Grounding ngày năm 2 chữ số và năm đứng trước | Codex | — | todo |
+| [R-03](R-03.md) | Kiểm OCR giữ dấu tiếng Việt (ảnh tổng hợp) | Codex | — | todo |
+| [T4-01](T4-01.md) | Chuyển nhãn thành dữ liệu fine-tune (SFT) | Codex | — | todo |
