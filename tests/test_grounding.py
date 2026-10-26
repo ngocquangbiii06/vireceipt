@@ -63,6 +63,44 @@ def test_date_printing_variants(grounded_receipt, printed):
     assert "issued_at.date" not in check_grounding(grounded_receipt, printed).unsupported_fields
 
 
+@pytest.mark.parametrize("separator", ["/", "-", "."])
+@pytest.mark.parametrize(
+    "iso,day,month,year",
+    [
+        ("2026-11-12", "12", "11", "2026"),
+        ("2026-02-01", "1", "2", "2026"),
+    ],
+)
+def test_two_digit_and_year_first_dates(grounded_receipt, separator, iso, day, month, year):
+    from vireceipt.grounding import check_grounding
+
+    grounded_receipt["issued_at"]["date"] = iso
+    for printed in (
+        f"{day}{separator}{month}{separator}{year[-2:]}",
+        f"{year}{separator}{month}{separator}{day}",
+        f"{int(day):02}{separator}{int(month):02}{separator}{year[-2:]}",
+    ):
+        assert "issued_at.date" not in check_grounding(grounded_receipt, printed).unsupported_fields
+
+
+@pytest.mark.parametrize(
+    "printed",
+    [
+        "11/12/2026",
+        "12/11/25",
+        "112/11/26",
+        "12/11/261",
+        "12026/11/12",
+        "2026/11/121",
+    ],
+)
+def test_date_mismatches_and_longer_numbers_do_not_ground(grounded_receipt, printed):
+    from vireceipt.grounding import check_grounding
+
+    grounded_receipt["issued_at"]["date"] = "2026-11-12"
+    assert "issued_at.date" in check_grounding(grounded_receipt, printed).unsupported_fields
+
+
 def test_vietnamese_diacritics_are_not_erased(grounded_receipt):
     from vireceipt.grounding import check_grounding
 

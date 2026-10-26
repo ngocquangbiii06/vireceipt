@@ -45,7 +45,11 @@ def _date_present(value: str, text: str) -> bool:
         return False
     day = f"0?{parsed.day}" if parsed.day < 10 else str(parsed.day)
     month = f"0?{parsed.month}" if parsed.month < 10 else str(parsed.month)
-    pattern = rf"(?<!\d){day}[-/.]{month}[-/.]{parsed.year}(?!\d)"
+    year = f"{parsed.year:04d}"
+    pattern = (
+        rf"(?<!\d)(?:{day}[-/.]{month}[-/.](?:{year}|{year[-2:]})"
+        rf"|{year}[-/.]{month}[-/.]{day})(?!\d)"
+    )
     return re.search(pattern, text) is not None
 
 
