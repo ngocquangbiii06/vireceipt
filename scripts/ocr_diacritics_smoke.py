@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import subprocess
+import sys
 import tempfile
 import unicodedata
 from datetime import date
@@ -95,6 +96,14 @@ def render_line(text: str, font: Any) -> Any:
     return image
 
 
+def write_report(report: str, output: Path) -> None:
+    """Save the full Unicode report and print it to the console."""
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(report, encoding="utf-8")
+    encoding = sys.stdout.encoding or "utf-8"
+    print(report.encode(encoding, errors="backslashreplace").decode(encoding))
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the actual OCR engine on temporary synthetic images and record provenance."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -135,9 +144,7 @@ def main(argv: list[str] | None = None) -> int:
         rows.append(f"| {reference} | {norm_text(prediction).replace('|', '&#124;')} |")
     report = "\n".join(rows) + "\n"
     output = Path("results") / f"ocr-diacritics-smoke-{date.today():%Y%m%d}.md"
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(report, encoding="utf-8")
-    print(report)
+    write_report(report, output)
     return 0
 
 

@@ -1,4 +1,6 @@
+import io
 import runpy
+import sys
 from pathlib import Path
 
 import pytest
@@ -37,3 +39,14 @@ def test_render_single_line_and_fixed_corpus_cover_vietnamese(smoke):
     assert len(smoke["LINES"]) == 40
     corpus = " ".join(smoke["LINES"]).lower()
     assert set("ăâđêôơưáàảãạ") <= set(corpus)
+
+
+def test_report_file_keeps_utf8_with_legacy_console(smoke, tmp_path, monkeypatch):
+    buffer = io.BytesIO()
+    console = io.TextIOWrapper(buffer, encoding="cp1252")
+    monkeypatch.setattr(sys, "stdout", console)
+    output = tmp_path / "report.md"
+    smoke["write_report"]("Sữa\n", output)
+    console.flush()
+    assert output.read_text(encoding="utf-8") == "Sữa\n"
+    assert buffer.getvalue()
