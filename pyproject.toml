@@ -15,6 +15,7 @@ vireceipt-freeze = "vireceipt.eval.lock:main"
 vireceipt-check-labels = "vireceipt.checks:main"
 vireceipt-split = "vireceipt.split:main"
 vireceipt-extract = "vireceipt.extract_cli:main"
+vireceipt-sft-data = "vireceipt.training.sft_data:main"
 
 [dependency-groups]
 dev = [

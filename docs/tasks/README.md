@@ -85,4 +85,4 @@ Các task chọn dữ liệu/train vẫn chờ kết luận T1-01 và dữ liệ
 | [R-01](R-01.md) | CI chạy đủ test API, giao diện và PostgreSQL | Codex | — | review |
 | [R-02](R-02.md) | Grounding ngày năm 2 chữ số và năm đứng trước | Codex | — | review |
 | [R-03](R-03.md) | Kiểm OCR giữ dấu tiếng Việt (ảnh tổng hợp) | Codex | — | review |
-| [T4-01](T4-01.md) | Chuyển nhãn thành dữ liệu fine-tune (SFT) | Codex | — | todo |
+| [T4-01](T4-01.md) | Chuyển nhãn thành dữ liệu fine-tune (SFT) | Codex | — | review |

@@ -94,6 +94,7 @@ uv run ruff check . && uv run ruff format --check .
 uv run vireceipt-check-labels tests/fixtures/gold.jsonl
 uv run --group label streamlit run src/vireceipt/labeling/app.py -- --data data
 uv run vireceipt-extract --help
+uv run vireceipt-sft-data --help
 
 # score predictions against labels (fixtures shown; real data lives in data/, not in git)
 uv run vireceipt-eval --gold tests/fixtures/gold.jsonl --pred tests/fixtures/pred.jsonl \
@@ -108,6 +109,13 @@ Prediction files are JSON Lines, one object per receipt:
 ```
 
 Only `id` and `receipt` are required; `receipt` may be `null` when extraction failed.
+
+Prepare VLM fine-tuning conversations with `uv run vireceipt-sft-data data/labels/train.jsonl
+--images-root data --out data/sft/train.jsonl` (likewise for `val`). The exporter shares the
+inference prompt/version, references relative image files without base64, and writes canonical
+assistant JSON atomically. Both input and output named `test.jsonl` are refused. Missing images
+fail the export unless `--skip-missing` explicitly skips and counts them. This prepares data;
+model choice, real training labels and training remain pending.
 
 ## Running an extraction adapter
 
