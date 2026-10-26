@@ -32,7 +32,7 @@ Mỗi đợt làm trên một nhánh `wave/<tên-đợt>`, review bằng `/revie
 | T6-5 | `wave/T6-5` (nối từ `wave/T6-4`) | T6-10, T6-11 | review |
 | T6-6 | `wave/T6-6` (nối từ `wave/T6-5`) | T6-12, T6-13 | review |
 | T6-7 | `wave/T6-7` (nối từ `wave/T6-6`) | T6-14, T6-15 | review |
-| R1 | `wave/R1` (nối từ `wave/T6-7`) | R-01, R-02, R-03, T4-01 | doing |
+| R1 | `wave/R1` (nối từ `wave/T6-7`) | R-01, R-02, R-03, T4-01 | review |
 
 ## Sau T1
 

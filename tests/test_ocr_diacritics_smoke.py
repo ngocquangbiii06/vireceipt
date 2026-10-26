@@ -50,3 +50,18 @@ def test_report_file_keeps_utf8_with_legacy_console(smoke, tmp_path, monkeypatch
     console.flush()
     assert output.read_text(encoding="utf-8") == "Sữa\n"
     assert buffer.getvalue()
+
+
+def test_report_records_configured_device_without_running_ocr(smoke, tmp_path, monkeypatch):
+    from PIL import ImageFont
+
+    font = ImageFont.load_default()
+    monkeypatch.setattr(ImageFont, "truetype", lambda *args, **kwargs: font)
+    monkeypatch.setattr("vireceipt.ocr.read_text", lambda image: "Sữa")
+    monkeypatch.setenv("VIRECEIPT_OCR_DEVICE", "gpu:0")
+    monkeypatch.setitem(smoke["main"].__globals__, "version", lambda package: "synthetic-version")
+    monkeypatch.setattr("subprocess.check_output", lambda *args, **kwargs: "synthetic-commit")
+    monkeypatch.chdir(tmp_path)
+    assert smoke["main"]([]) == 0
+    report = next((tmp_path / "results").glob("*.md")).read_text(encoding="utf-8")
+    assert "device=gpu:0" in report

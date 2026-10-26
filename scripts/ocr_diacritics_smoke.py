@@ -2,6 +2,7 @@
 
 import argparse
 import hashlib
+import os
 import subprocess
 import sys
 import tempfile
@@ -114,6 +115,7 @@ def main(argv: list[str] | None = None) -> int:
     from vireceipt.ocr import read_text
 
     font = ImageFont.truetype(str(args.font), 40)
+    device = os.environ.get("VIRECEIPT_OCR_DEVICE") or "cpu"
     predictions = []
     with tempfile.TemporaryDirectory(prefix="vireceipt-ocr-smoke-") as directory:
         for index, text in enumerate(LINES):
@@ -131,7 +133,8 @@ def main(argv: list[str] | None = None) -> int:
         "",
         f"- Commit: {commit}; script SHA256: {script_hash}",
         f"- paddleocr: {version('paddleocr')}; paddlepaddle: {version('paddlepaddle')}",
-        "- Detection: PP-OCRv5_mobile_det; recognition: latin_PP-OCRv5_mobile_rec; CPU",
+        "- Detection: PP-OCRv5_mobile_det; recognition: latin_PP-OCRv5_mobile_rec; "
+        f"device={device}",
         f"- Font: {args.font.resolve()}, size40; one line/image, black on white",
         f"- Exact after norm_text: {metrics['exact']}/{metrics['lines']}",
         f"- Accentless exact: {metrics['accentless']}/{metrics['lines']}",
