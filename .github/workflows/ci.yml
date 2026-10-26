@@ -2,21 +2,37 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'wave/**']
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: vireceipt_test
+          POSTGRES_USER: vireceipt_ci
+          POSTGRES_PASSWORD: vireceipt_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vireceipt_ci -d vireceipt_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - run: uv sync --locked
+      - run: uv sync --locked --group api --group storage --group label
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest
+      - run: uv run pytest -rs
+        env:
+          VIRECEIPT_TEST_DATABASE_URL: postgresql://vireceipt_ci:vireceipt_ci@localhost:5432/vireceipt_test
       # smoke test of the CLI on the synthetic fixtures
       - run: >
           uv run vireceipt-eval --gold tests/fixtures/gold.jsonl

@@ -80,6 +80,11 @@ How to label: [docs/labeling-guide.md](docs/labeling-guide.md). Data layout: [da
 
 ## Quickstart
 
+PostgreSQL integration tests require an isolated database named `vireceipt_test`.
+Install `uv sync --locked --group api --group storage --group label`, set
+`VIRECEIPT_TEST_DATABASE_URL` to its PostgreSQL connection URL, then run `uv run pytest -rs`.
+Without that variable DB tests skip; `-rs` lists the reasons. Use a dedicated test database.
+
 ```bash
 uv sync
 # Optional CPU OCR baseline (downloads dependencies; first use also downloads model weights)
